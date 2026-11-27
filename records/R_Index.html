@@ -34,11 +34,11 @@ input[type=checkbox]{width:18px;height:18px;padding:0;margin:0;accent-color:var(
  .cards #recordRows td::before{content:none}
  .cards #recordRows td:nth-child(-n+4){order:1}
  .cards #recordRows td.brk{display:block;flex:0 0 100%;width:100%;padding:0;height:0}
- .cards #recordRows td.brk1{order:2}#recordRows td.brk2{order:4}
- .cards #recordRows td.c-best,#recordRows td.c-avg{order:3;font-size:1.2rem;padding:6px 0 4px;white-space:nowrap}
- .cards #recordRows td.c-best::before,#recordRows td.c-avg::before{content:attr(data-label);color:var(--muted);font-weight:700;font-size:.78rem;margin-right:6px}
+ .cards #recordRows td.brk1{order:2}.cards #recordRows td.brk2{order:4}
+ .cards #recordRows td.c-best,.cards #recordRows td.c-avg{order:3;font-size:1.2rem;padding:6px 0 4px;white-space:nowrap}
+ .cards #recordRows td.c-best::before,.cards #recordRows td.c-avg::before{content:attr(data-label);color:var(--muted);font-weight:700;font-size:.78rem;margin-right:6px}
  .cards #recordRows td.c-att{order:5;padding:2px 0}
- .cards #recordRows td.c-worst,#recordRows td.na,#recordRows td:empty{display:none}
+ .cards #recordRows td.c-worst,.cards #recordRows td.na,.cards #recordRows td:empty,.cards #recordRows td.c-avg.no-avg{display:none}
  .cards #recordRows td.brk:empty{display:block}
 }
 #detailTitle{font-size:1.6rem;font-weight:800}
@@ -1287,7 +1287,7 @@ function renderRecords(){
  $('recMoreRow').style.display=list.length>shown.length?'flex':'none';
  $('recMore').textContent=`もっと見る（残り${list.length-shown.length}件）`;
  const L=['競技日','種目','競技者','形式','1回目','2回目','3回目','4回目','5回目','ベスト','ワースト','平均'];
- $('recordRows').innerHTML=shown.map(r=>`<tr><td data-label="${L[0]}">${esc(r.date)}</td><td data-label="${L[1]}">${evShort(r.event)}</td><td data-label="${L[2]}">${plink(r.name)}</td><td data-label="${L[3]}">${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return a?`<td class="c-att" data-label="${L[4+k]}"><button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button></td>`:`<td class="na" data-label="${L[4+k]}">—</td>`}).join('')}<td class="c-best" data-label="${L[9]}"><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td class="c-worst" data-label="${L[10]}">${esc(r.worst)}</td><td class="c-avg" data-label="${L[11]}"><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td></td><td class="brk brk1" aria-hidden="true"></td><td class="brk brk2" aria-hidden="true"></td></tr>`).join('');
+ $('recordRows').innerHTML=shown.map(r=>`<tr><td data-label="${L[0]}">${esc(r.date)}</td><td data-label="${L[1]}">${evShort(r.event)}</td><td data-label="${L[2]}">${plink(r.name)}</td><td data-label="${L[3]}">${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return a?`<td class="c-att" data-label="${L[4+k]}"><button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button></td>`:`<td class="na" data-label="${L[4+k]}">—</td>`}).join('')}<td class="c-best" data-label="${L[9]}"><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td class="c-worst" data-label="${L[10]}">${esc(r.worst)}</td><td class="c-avg${showAvg(r)==='—'?' no-avg':''}" data-label="${L[11]}"><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td></td><td class="brk brk1" aria-hidden="true"></td><td class="brk brk2" aria-hidden="true"></td></tr>`).join('');
 }
 $('rfEvent').addEventListener('change',()=>{wantEv='';renderRecords();rfPersist()});
 $('rfName').addEventListener('input',()=>{renderRecords();rfPersist()});
