@@ -118,7 +118,7 @@ button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active
 #fmcKb .seg button:disabled{opacity:.35;cursor:not-allowed}
 #fmcKb .kbS{font-size:1rem}
 #fmcKb .kbW{grid-column:span 2}#fmcKb .kbW4{grid-column:span 4}
-#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% - 62px);z-index:5;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
+#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% - 62px);z-index:5;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
 #fmcKb .kbMore button{padding:10px 0;font-size:1.2rem}
 #fmcKb button.on{background-color:var(--chip-active);border-color:var(--accent);color:var(--accent)}
 #attemptGrid input.kbOn,#attemptGrid textarea.kbOn{outline:2px solid var(--accent);outline-offset:0;background-image:linear-gradient(color-mix(in srgb,var(--accent) 10%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))}
@@ -1586,14 +1586,14 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
 (()=>{
  const grid=$('attemptGrid');
  const kb=document.createElement('div');kb.id='fmcKb';kb.setAttribute('role','group');kb.setAttribute('aria-label','回転記号キーボード');
- const K=(l,v,t,c,x)=>`<button type="button" data-k="${v}" data-t="${t}" class="${(c?'c'+c:'')+(x?' '+x:'')}">${l}</button>`;
+ const K=(l,v,t,c,x)=>`<button type="button" data-k="${v}" data-t="${t}" class="${(c?'c'+c:'')+(x?' '+x:'')}">${String(l).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</button>`;
  const C=(v,x)=>K(v,v,'c','',x);
  const DEL='<button type="button" data-act="del" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5H20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H8.5L2.5 12z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg></button>';
  const ENT='<button type="button" data-k="\n" data-t="c" aria-label="改行"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6v6a2 2 0 0 1-2 2H5"/><path d="M9 10l-4 4 4 4"/></svg></button>';
  const SP=w=>`<button type="button" data-k=" " data-t="c" class="${w}" aria-label="スペース"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v6h16v-6"/></svg></button>`;
  const rot=()=>K('R','R','f','R')+K('U','U','f','U')+K('F','F','f','F')+K("'","'",'m')+DEL
   +K('L','L','f','L')+K('D','D','f','D')+K('B','B','f','B')+K('2','2','m');
- const MORE=['!','?','+','-','=','*','%','&','$','#','^','[',']']; // よく使いそうな順。カッコ類は隣同士
+ const MORE=['!','?','+','-','=','*','%','&','$','#','^','[',']','<','>']; // よく使いそうな順。カッコ類は隣同士
  kbRender=()=>{
   const mo=fmcMo[kbTarget],f=mo?'c':kbField,sig=[f,mo,kbNum,kbMore].join();
   if(kb.dataset.sig===sig)return;kb.dataset.sig=sig;
