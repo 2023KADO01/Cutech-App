@@ -118,6 +118,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 .mt .cube{width:44px;height:44px;flex:none}
 .mt b{display:block;font-size:1.1rem;line-height:1.3;color:var(--ttext)}
 .mt span{display:block;font-size:.85rem;color:var(--muted);font-weight:700}
+.mintro{margin:4px 0 12px;font-size:.85rem;line-height:1.6;color:var(--muted)}.mintro a{color:var(--accent);font-weight:700}
 .mh{font-size:.78rem;font-weight:800;color:var(--muted);margin:16px 0 6px;letter-spacing:.04em}
 .gl{display:flex;flex-direction:column;gap:6px}
 .gr{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--field)}
@@ -1273,7 +1274,7 @@ function titleModalHtml(ti){
  const head=`<div class="modal-head"><div class="mt${t.k==='opal'?' opal-anim':''}" style="--ttext:var(--${t.k}-text)">${titleCube(t.k)}<div><b id="titleModalTitle">${t.name}</b><span>黄金の証 ${n}/${tot}</span></div></div><button type="button" class="mx" id="titleClose" aria-label="閉じる">×</button></div>`;
  const gl=cats.map(c=>`<div class="gr${ti.owned.has(c.svg)?' ok':''}"><img alt="" src="${bdgSrc(c.svg)}"><div class="tx"><b>${esc(c.nm)}</b><span>${esc(c.cond)}</span></div><div class="ck">${TCHECK}</div></div>`).join('');
  const tt=TTIERS.filter(x=>x.n<=tot).map(x=>`<div class="r ${x.n<n?'done':x.n===n?'cur':''}${x.k==='opal'?' opal-anim':''}"><span>${titleCube(x.k)}</span><span>${x.name}</span><em>${x.n}つ達成</em></div>`).join('');
- return head+`<div class="mh">黄金の証（${tot}種類）</div><div class="gl">${gl}</div><div class="mh">称号の段階</div><div class="tt">${tt}</div>`;
+ return head+`<p class="mintro"><a href="https://sam596.github.io/WCA-Stats/mollerzmembership/Diamond" target="_blank" rel="noopener">WCA Mollerz Membership</a> をオマージュしたメンバー称号です。下の黄金の証をいくつ取ったかでランクが決まります。</p><div class="gl">${gl}</div><div class="mh">称号の段階</div><div class="tt">${tt}</div>`;
 }
 const titleModalOpen=()=>$('titleModal').style.display==='flex';
 function openTitleModal(){
