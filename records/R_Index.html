@@ -184,7 +184,7 @@ function applyTheme(t,persist){
 $('themeBtn').addEventListener('click',()=>applyTheme(currentTheme()==='dark'?'light':'dark',true));
 const isGAS=typeof google!=='undefined'&&google.script&&google.script.run;
 let curPg='main',curPlayer='',rev=null;
-let records=[];
+let records=[],names=[];
 let dataLoaded=false;
 const emptyRec=()=>dataLoaded?'記録はありません。':'記録を読み込み中…';
 const J=JSON.stringify;
@@ -261,7 +261,7 @@ document.addEventListener('click',e=>{
  if(o&&o.isConnected&&!o.disabled&&o.getClientRects().length){if(/^(INPUT|TEXTAREA)$/.test(o.tagName))o.focus();else o.click()}   // 触れた要素の操作として行う
 },true);
 function paint(){try{render();renderSaved();if(curPg==='player')renderPlayer()}catch(e){console.error(e)}}
-function adopt(d){dataLoaded=true;setEvCfg(d.events);setBdgCfg(d.badges);records=d.records||[];scrambles=d.scrambles||[];records.forEach(recalcOne);paintAuto()}
+function adopt(d){dataLoaded=true;setEvCfg(d.events);setBdgCfg(d.badges);records=d.records||[];names=d.names||[];scrambles=d.scrambles||[];records.forEach(recalcOne);paintAuto()}
 function mergeList(arr,changes){
  const m=new Map(arr.map(x=>[x.id,x])),f=new Map();
  for(const c of changes){
@@ -273,25 +273,42 @@ function mergeList(arr,changes){
 }
 function applyChanges(ch){
  const R=[],S=[];
- for(const c of ch){if(c.t==='records')R.push(c);else if(c.t==='scrambles')S.push(c);else if(c.t==='events')setEvCfg(c.v);else if(c.t==='badges')setBdgCfg(c.v)}
+ for(const c of ch){if(c.t==='names')names=c.v;else if(c.t==='name'){if(typeof c.v==='string')names=[c.v,...names.filter(x=>x!==c.v)]}else if(c.t==='records')R.push(c);else if(c.t==='scrambles')S.push(c);else if(c.t==='events')setEvCfg(c.v);else if(c.t==='badges')setBdgCfg(c.v)}
  if(R.length){R.forEach(c=>{if(c.v)recalcOne(c.v)});records=mergeList(records,R)}
  if(S.length)scrambles=mergeList(scrambles,S);
  paintAuto();
 }
+// 端末のキャッシュ（{rev,data}）。取り込みで変化があったときだけ、少し遅らせて保存する
+const CACHE_KEY='cutech-rec-cache-v1';let cacheT=null,unconf=false,loading=0;   // unconf＝キャッシュで起動してから、まだサーバーの応答を採用していない
+function cacheLoad(){try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c&&typeof c.rev==='number'&&c.data&&Array.isArray(c.data.records)&&Array.isArray(c.data.names)&&Array.isArray(c.data.scrambles))return c}catch{}return null}
+function cacheDrop(){try{localStorage.removeItem(CACHE_KEY)}catch{}}
+function cacheSave(){clearTimeout(cacheT);cacheT=setTimeout(()=>{try{const t=JSON.stringify({rev,data:{records,names,scrambles,events:EVCFG||[],badges:BDGCFG||{}}});if(t.length>4e6){cacheDrop();return}localStorage.setItem(CACHE_KEY,t)}catch{cacheDrop()}},2000)}
 async function loadAll(force){
+ if(!force&&loading)return;   // 前の読み込みが終わっていなければ何もしない
+ loading++;
  try{
   const first=rev===null;
-  if(first)bar('読み込み中…');
-  if(force||first){
+  let cached=null;
+  if(first){
+   bar('読み込み中…');
+   cached=cacheLoad();
+   if(cached){try{adopt(cached.data);rev=cached.rev;unconf=true}catch{cached=null;rev=null;cacheDrop()}}
+  }
+  const stale=(r,full)=>rev!==null&&r<rev&&!(unconf&&full);   // サーバーの版は減らないので、小さい応答は古い応答として捨てる
+  if(force||(first&&!cached)){
    const d=await gs('getAll');
-   adopt(d);rev=d.rev;
+   if(stale(d.rev,true)){bar('');return}
+   adopt(d);rev=d.rev;unconf=false;cacheSave();
   }else{
    const c=await gs('getChanges',rev);
-   if(c.full){adopt(c.data);rev=c.rev}
-   else if(c.rev!==rev){applyChanges(c.changes||[]);rev=c.rev}
+   if(stale(c.rev,c.full)){bar('');return}
+   if(c.full){adopt(c.data);rev=c.rev;cacheSave()}
+   else if(c.rev!==rev){applyChanges(c.changes||[]);rev=c.rev;cacheSave()}
+   unconf=false;
   }
   bar('');
  }catch(e){bar('読み込みに失敗しました：'+e.message,true)}
+ finally{loading--}
 }
 setInterval(()=>{if(document.visibilityState==='visible')loadAll()},30000);
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};

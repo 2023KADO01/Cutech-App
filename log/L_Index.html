@@ -381,7 +381,7 @@ function applyTheme(t,persist){
 $('themeBtn').addEventListener('click',()=>applyTheme(currentTheme()==='dark'?'light':'dark',true));
 const MODAL_SHOW='flex';
 const isGAS=typeof google!=='undefined'&&google.script&&google.script.run;
-let curPg='main',curPlayer='',isAdmin=false,adminAuth=null,snap=null,rev=null,syncChain=Promise.resolve(),editingScrId=null,lastRecList=[],lastScrList=[];
+let curPg='main',curPlayer='',isAdmin=false,adminAuth=null,snap=null,rev=null,dirty=false,syncChain=Promise.resolve(),editingScrId=null,lastRecList=[],lastScrList=[];
 let records=[];
 let dataLoaded=false;
 const J=JSON.stringify,TOK='cutech-admin-token';
@@ -408,7 +408,7 @@ function diffOps(base){
  if(cur.b!==base.b)ops.push({t:'setBadges',badges:BDGCFG||{}});
  return{ops,cur};
 }
-const hasPending=()=>!!snap&&diffOps(snap).ops.length>0;
+const hasPending=()=>dirty&&!!snap&&diffOps(snap).ops.length>0;   // dirty＝sync()が呼ばれた（ローカルで変更した）ときだけ差分を計算する
 function recalcOne(r){try{const c=calc(r.attempts,r.event,recordFormat(r));r.best=c.best;r.worst=c.worst;r.average=c.average}catch{}}
 // ================= タップ診断（原因調査用）=================
 // ロゴ（Cutech …）を、3秒以内に5回続けてタップすると、画面の上に診断表示が出ます（もう一度5回タップで消えます）。
@@ -480,7 +480,7 @@ document.addEventListener('click',e=>{
  if(o&&o.isConnected&&!o.disabled&&o.getClientRects().length){if(/^(INPUT|TEXTAREA)$/.test(o.tagName))o.focus();else o.click()}   // 触れた要素の操作として行う
 },true);
 function paint(){try{render();renderNames();renderSaved();updateScr();renderRename()}catch(e){console.error(e)}}
-function adopt(d){dataLoaded=true;setEvCfg(d.events);setBdgCfg(d.badges);records=d.records||[];names=d.names||[];scrambles=d.scrambles||[];records.forEach(recalcOne);snap=takeSnap();paintAuto()}
+function adopt(d){dataLoaded=true;setEvCfg(d.events);setBdgCfg(d.badges);records=d.records||[];names=d.names||[];scrambles=d.scrambles||[];records.forEach(recalcOne);snap=takeSnap();dirty=false;paintAuto()}
 function mergeList(arr,changes){
  const m=new Map(arr.map(x=>[x.id,x])),f=new Map();
  for(const c of changes){
@@ -491,14 +491,13 @@ function mergeList(arr,changes){
  return[...[...f.values()].reverse(),...m.values()];
 }
 function applyChanges(ch){
- const R=[],S=[];let nm=null;
- for(const c of ch){if(c.t==='names')nm=c.v;else if(c.t==='records')R.push(c);else if(c.t==='scrambles')S.push(c);else if(c.t==='events')setEvCfg(c.v);else if(c.t==='badges')setBdgCfg(c.v)}
+ const R=[],S=[];
+ for(const c of ch){if(c.t==='names')names=c.v;else if(c.t==='name'){if(typeof c.v==='string')names=[c.v,...names.filter(x=>x!==c.v)]}else if(c.t==='records')R.push(c);else if(c.t==='scrambles')S.push(c);else if(c.t==='events')setEvCfg(c.v);else if(c.t==='badges')setBdgCfg(c.v)}
  if(R.length){R.forEach(c=>{if(c.v)recalcOne(c.v)});records=mergeList(records,R)}
  if(S.length)scrambles=mergeList(scrambles,S);
- if(nm)names=nm;
- snap=takeSnap();paintAuto();
+ snap=takeSnap();dirty=false;paintAuto();
 }
-function sync(){syncChain=syncChain.then(doSync)}
+function sync(){dirty=true;syncChain=syncChain.then(doSync)}
 const PUB={addRec:1,addName:1},OUTBOX='cutech-outbox';
 const unsentIds=new Set();
 let retryN=0,retryTimer=null;
@@ -523,11 +522,11 @@ function applyOutbox(){
 function scheduleRetry(ops){
  const n=ops.filter(o=>o.t==='addRec').length,delays=[5,15,30,60],d=delays[Math.min(retryN,delays.length-1)];
  retryN++;
- bar((n?`未送信の記録が${n}件あります。`:'未送信のデータがあります。')+`${d}秒後に再送します…`,true,true);
+ bar((n&&ops.every(o=>PUB[o.t])?`未送信の記録が${n}件あります。`:'未保存の変更があります。')+`${d}秒後に再送します…`,true,true);
  repaintLists();
  clearTimeout(retryTimer);retryTimer=setTimeout(()=>sync(),d*1000);
 }
-// Admin changes are never re-sent automatically: revert them, but keep unsent public records.
+// Admin changes are reverted when the server rejects them (or the login/session is gone), but unsent public records are kept.
 async function revertAdmin(ops){
  const pub=ops.filter(o=>PUB[o.t]);
  await loadAll(true);
@@ -536,15 +535,16 @@ async function revertAdmin(ops){
 async function doSync(){
  if(!snap)return;
  const{ops,cur}=diffOps(snap);
- if(!ops.length){unsentIds.clear();return}
+ if(!ops.length){unsentIds.clear();dirty=false;return}
  const pubOnly=ops.every(o=>PUB[o.t]);
+ if(!pubOnly&&!isAdmin){clearTimeout(retryTimer);retryN=0;bar('');alert('管理者がログアウトしたため、保存されていない管理者の操作は取り消しました。');await revertAdmin(ops);return}   // 再送待ちの間にログアウトした
  outboxSet(ops);
  ops.forEach(o=>{if(o.t==='addRec')unsentIds.add(o.rec.id)});
  bar(pubOnly?'送信中…':'保存中…');
  try{
   const res=await gs('apply',ops,adminAuth,DEV);
   if(res&&res.error){const e=new Error(res.error);e.server=true;e.auth=!!res.authError;e.temp=/集中/.test(res.error);throw e}
-  snap=cur;unsentIds.clear();outboxClear();retryN=0;clearTimeout(retryTimer);bar('');
+  snap=cur;if(!diffOps(snap).ops.length)dirty=false;unsentIds.clear();outboxClear();retryN=0;clearTimeout(retryTimer);bar('');
   const rej=(res&&res.rejected||[]).filter(x=>x&&x.code!=='dup'&&x.t!=='addName'); // addNameの却下は知らせない
   if(res&&res.rejected&&res.rejected.length){
    // 保存されなかった操作がある：サーバーの状態に合わせて読み直す（未送信の控えも消してある）
@@ -556,7 +556,7 @@ async function doSync(){
   }else{await loadAll();repaintLists()}
  }catch(e){
   const temp=!e.server||e.temp;
-  if(temp&&pubOnly){scheduleRetry(ops);return}
+  if(temp&&!e.auth&&(pubOnly||isAdmin)){scheduleRetry(ops);return}   // 一時的なエラーは、管理者の操作も含めて再送する
   bar('');
   if(e.auth){setAdmin(false);alert('管理者のログインが切れました。ログインし直して、もう一度操作してください。')}
   else alert(temp?'保存できませんでした。もう一度操作してください。':'保存できませんでした：'+e.message);
@@ -564,25 +564,44 @@ async function doSync(){
  }
 }
 $('syncRetry').addEventListener('click',()=>{clearTimeout(retryTimer);retryN=0;sync()});
+window.addEventListener('beforeunload',e=>{if(hasPending()){e.preventDefault();e.returnValue=''}});   // 管理者の未保存の変更は端末に残らない
 window.addEventListener('online',()=>{if(hasPending()){clearTimeout(retryTimer);retryN=0;sync()}});
-// 差分だけを読み込む（初回・履歴切れ・強制時のみ全件）
+// 端末のキャッシュ（{rev,data}）。取り込みで変化があったときだけ、少し遅らせて保存する
+const CACHE_KEY='cutech-log-cache-v1';let cacheT=null,unconf=false,loading=0;   // unconf＝キャッシュで起動してから、まだサーバーの応答を採用していない
+function cacheLoad(){try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c&&typeof c.rev==='number'&&c.data&&Array.isArray(c.data.records)&&Array.isArray(c.data.names)&&Array.isArray(c.data.scrambles))return c}catch{}return null}
+function cacheDrop(){try{localStorage.removeItem(CACHE_KEY)}catch{}}
+function cacheSave(){clearTimeout(cacheT);cacheT=setTimeout(()=>{try{if(hasPending())return;const t=J({rev,data:{records,names,scrambles,events:EVCFG||[],badges:BDGCFG||{}}});if(t.length>4e6){cacheDrop();return}localStorage.setItem(CACHE_KEY,t)}catch{cacheDrop()}},2000)}
+// 差分だけを読み込む（初回・履歴切れ・強制時のみ全件。起動時はキャッシュがあればそれを先に表示する）
 async function loadAll(force){
+ if(!force&&loading)return;   // 前の読み込みが終わっていなければ何もしない
+ loading++;
  try{
   const first=rev===null;
-  if(first)bar('読み込み中…');
+  let cached=null;
+  if(first){
+   bar('読み込み中…');
+   cached=cacheLoad();
+   if(cached){try{adopt(cached.data);rev=cached.rev;unconf=true}catch{cached=null;rev=null;cacheDrop()}}
+   if(cached)applyOutbox();
+  }
+  const stale=(r,full)=>rev!==null&&r<rev&&!(unconf&&full);   // サーバーの版は減らないので、小さい応答は古い応答として捨てる
   if(!force&&!first&&hasPending()){bar('');return}
-  if(force||first){
+  if(force||(first&&!cached)){
    const d=await gs('getAll');
    if(!force&&hasPending()){bar('');return}
-   adopt(d);rev=d.rev;if(first)applyOutbox();
+   if(stale(d.rev,true)){bar('');return}
+   adopt(d);rev=d.rev;unconf=false;if(first&&!cached)applyOutbox();cacheSave();
   }else{
    const c=await gs('getChanges',rev);
    if(hasPending()){bar('');return}
-   if(c.full){adopt(c.data);rev=c.rev}
-   else if(c.rev!==rev){applyChanges(c.changes||[]);rev=c.rev}
+   if(stale(c.rev,c.full)){bar('');return}
+   if(c.full){adopt(c.data);rev=c.rev;cacheSave()}
+   else if(c.rev!==rev){applyChanges(c.changes||[]);rev=c.rev;cacheSave()}
+   unconf=false;
   }
   bar('');
  }catch(e){bar('読み込みに失敗しました：'+e.message,true)}
+ finally{loading--}
 }
 function setAdmin(on,auth){
  isAdmin=on;adminAuth=on?auth:null;

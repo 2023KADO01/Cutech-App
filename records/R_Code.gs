@@ -26,7 +26,8 @@ function doGet() {
 }
 
 /* ---------- 読み取り ---------- */
-function ss_() { return SpreadsheetApp.openById(SHEET_ID); }
+let ss = null;   // 1回の実行の中では開いた結果を使い回す
+function ss_() { return ss || (ss = SpreadsheetApp.openById(SHEET_ID)); }
 
 function readAll_(name) {
   const s = ss_().getSheetByName(name);
@@ -38,18 +39,25 @@ function readAll_(name) {
 function parse_(v) { try { return JSON.parse(v); } catch (e) { return null; } }
 
 // 入力用サイトが metaシートに書いた版番号を読む（なければ変更履歴から推定する）
-function meta_() {
+// 結果は15秒だけキャッシュする（fresh が true のときは必ずシートを読む）
+function meta_(fresh) {
+  const c = CacheService.getScriptCache();
+  if (!fresh) { try { const v = c.get('meta'); if (v) return JSON.parse(v); } catch (e) { /* キャッシュが読めなければシートを読む */ } }
+  let m;
   const s = ss_().getSheetByName('meta');
   if (s && s.getLastRow() >= 3) {
     const v = s.getRange(2, 2, 2, 1).getValues();
-    return { rev: Number(v[0][0]) || 0, min: Number(v[1][0]) || 0 };
+    m = { rev: Number(v[0][0]) || 0, min: Number(v[1][0]) || 0 };
+  } else {
+    const ch = readAll_('changes');
+    m = { rev: ch.length ? Number(ch[ch.length - 1][0]) : 0, min: ch.length ? Number(ch[0][0]) : 0 };
   }
-  const ch = readAll_('changes');
-  return { rev: ch.length ? Number(ch[ch.length - 1][0]) : 0, min: ch.length ? Number(ch[0][0]) : 0 };
+  try { c.put('meta', JSON.stringify(m), 15); } catch (e) { /* 保存できなくても読み取りには影響させない */ }
+  return m;
 }
 
 function getAll() {
-  const rev = meta_().rev;   // データより先に読む（途中で更新されても差分で補正される）
+  const rev = meta_(true).rev;   // データより先に読む（途中で更新されても差分で補正される）
   return {
     rev: rev,
     records:   readAll_('records').map(r => parse_(r[4])).filter(Boolean).reverse(),
@@ -75,12 +83,13 @@ function readBadges_() {
 
 // 前回の版（since）以降の変更だけを返す。履歴が足りない場合は全件を返す。
 function getChanges(since) {
-  const m = meta_();
+  let m = meta_();   // キャッシュ（15秒）
   since = Number(since);
+  if (since > m.rev) m = meta_(true);   // 手元の方が新しいときは、キャッシュが古いだけかもしれないので読み直す
   if (!(since >= 0) || since > m.rev || since < m.min) return fullResult_();
   if (since === m.rev) return { rev: m.rev, changes: [] };
-  const rows = readAll_('changes').filter(r => Number(r[0]) > since);
-  if (rows.length > DIFF_MAX) return fullResult_();
+  const rows = changesSince_(since);
+  if (rows === null) return fullResult_();
   const changes = [];
   for (const r of rows) {
     const v = parse_(r[4]);
@@ -88,6 +97,18 @@ function getChanges(since) {
     else if (v !== null) changes.push({ t: String(r[1]), op: r[2] === 'set' ? 'set' : 'put', id: String(r[3]), v: v });
   }
   return { rev: m.rev, changes: changes };
+}
+// changes は rev の昇順。A列だけ読んで二分探索し、since より新しい行だけ5列読む（多すぎるときは null）
+function changesSince_(since) {
+  const s = ss_().getSheetByName('changes');
+  const n = s ? s.getLastRow() - 1 : 0;
+  if (n < 1) return [];
+  const revs = s.getRange(2, 1, n, 1).getValues();
+  let lo = 0, hi = n;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (Number(revs[m][0]) > since) hi = m; else lo = m + 1; }
+  if (n - lo > DIFF_MAX) return null;
+  if (lo === n) return [];
+  return s.getRange(2 + lo, 1, n - lo, 5).getValues().filter(r => Number(r[0]) > since);
 }
 function fullResult_() {
   const d = getAll();
