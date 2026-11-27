@@ -21,12 +21,26 @@ main{max-width:1000px;margin:auto;padding:28px 18px 60px}.top{display:flex;justi
 .seg.sm{display:inline-flex;align-self:flex-start;min-height:0;padding:3px;flex:none}.seg.sm button{padding:6px 18px;white-space:nowrap;flex:none}
 input[type=checkbox]{width:18px;height:18px;padding:0;margin:0;accent-color:var(--accent);cursor:pointer;flex:none}
 #pageRecords th,#recordRows td:nth-child(2){white-space:nowrap}
-.dg{margin-bottom:12px}.dg>label{display:block;font-size:.86rem;color:var(--muted);margin-bottom:6px}
-.dgrow{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px}
-.dgrow select{padding:12px 22px 12px 8px;background-position:right 6px center;min-width:0;font-size:.95rem}
-.calbtn{position:relative;display:flex;align-items:center;justify-content:center;width:46px;border:1px solid var(--field-line);border-radius:10px;background:var(--field);cursor:pointer;overflow:hidden;font-size:1.1rem}
-.calbtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;border:0;cursor:pointer}
-select option.dim{color:var(--muted);opacity:.5}
+.pf .row{margin:0 0 8px;gap:6px}.pf [hidden]{display:none!important}.pf .btn.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.pf-nav{justify-content:flex-start}.pf-lab{min-width:9em;text-align:center}
+.pf-custom{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}.pf-custom .field{margin-bottom:4px}.pf-warn{margin:0 0 8px}
+.brk{display:none}.fchip{display:inline-flex;align-items:center;gap:2px;background:var(--btn2);border:1px solid var(--field-line);border-radius:999px;padding:2px 4px 2px 12px;font-size:.82rem}.fchip button{border:0;background:none;color:inherit;font:inherit;font-size:1rem;line-height:1;padding:4px 8px;cursor:pointer;border-radius:999px}
+.vsw{display:none;min-height:0;padding:3px;flex:none}.vsw button{display:flex;align-items:center;justify-content:center;width:40px;height:34px;padding:0;flex:none}@media(max-width:640px){.vsw{display:flex;margin-left:auto}}
+@media(max-width:640px){
+ #pageRecords table.cards,.cards tbody,.cards tr,.cards td{display:block;width:100%}
+ .cards thead{display:none}
+ .cards tr{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;margin-bottom:10px;background:var(--field)}
+ .cards #recordRows td:nth-child(n){display:block;flex:none;width:auto;padding:3px 0;border:0;white-space:normal;text-align:left;min-width:0}
+ .cards #recordRows td::before{content:none}
+ .cards #recordRows td:nth-child(-n+4){order:1}
+ .cards #recordRows td.brk{display:block;flex:0 0 100%;width:100%;padding:0;height:0}
+ .cards #recordRows td.brk1{order:2}#recordRows td.brk2{order:4}
+ .cards #recordRows td.c-best,#recordRows td.c-avg{order:3;font-size:1.2rem;padding:6px 0 4px;white-space:nowrap}
+ .cards #recordRows td.c-best::before,#recordRows td.c-avg::before{content:attr(data-label);color:var(--muted);font-weight:700;font-size:.78rem;margin-right:6px}
+ .cards #recordRows td.c-att{order:5;padding:2px 0}
+ .cards #recordRows td.c-worst,#recordRows td.na,#recordRows td:empty{display:none}
+ .cards #recordRows td.brk:empty{display:block}
+}
 #detailTitle{font-size:1.6rem;font-weight:800}
 .scs .exl{margin:4px 0 0;padding-left:0;list-style:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;word-break:break-word}
 .plink{color:inherit;text-decoration:underline;text-decoration-color:var(--muted);text-underline-offset:3px}
@@ -58,8 +72,8 @@ select option.dim{color:var(--muted);opacity:.5}
 :root{--press:brightness(.74) saturate(1.15)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--press:brightness(1.6)}}
 :root[data-theme="dark"]{--press:brightness(1.6)}
-button,a,.btn,.att-btn,.p2,.calbtn,.rn-item,.ct-row,.isel-btn,.isel-opt,.sq1-ud,.sq1-lr,.seg button,.chip button{touch-action:manipulation;transition:filter .12s ease,transform .12s ease}
-button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active,.p2:active,.calbtn:active,.isel-btn:active,.sq1-ud:active,.sq1-lr:active,.seg button:active,.chip button:active,[role="button"]:active{filter:var(--press);transform:scale(.96);transition-duration:0s}
+button,a,.btn,.att-btn,.p2,.rn-item,.ct-row,.isel-btn,.isel-opt,.sq1-ud,.sq1-lr,.seg button,.chip button{touch-action:manipulation;transition:filter .12s ease,transform .12s ease}
+button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active,.p2:active,.isel-btn:active,.sq1-ud:active,.sq1-lr:active,.seg button:active,.chip button:active,[role="button"]:active{filter:var(--press);transform:scale(.96);transition-duration:0s}
 .rn-item:active,.ct-row:active,.isel-opt:active{filter:var(--press);transition-duration:0s}
 /* 意味のない場所では、長押し（選択・メニュー）とダブルタップ拡大を無効にする */
 html,body{touch-action:manipulation}
@@ -90,7 +104,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 
 
 <section class="panel" id="dayPanel">
- <div class="records-head"><h2>今日の記録</h2><input id="dayDate" type="date" aria-label="表示する日" style="width:auto"></div>
+ <div class="records-head"><h2>今日の記録</h2><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn secondary sm" type="button" id="dayPrev" aria-label="前の記録日" title="前の記録日">◀</button><input id="dayDate" type="date" aria-label="表示する日" style="width:auto;min-width:0"><button class="btn secondary sm" type="button" id="dayNext" aria-label="次の記録日" title="次の記録日">▶</button><button class="btn secondary sm" type="button" id="dayToday">今日</button></div></div>
  <div id="dayBody"></div>
 </section>
 
@@ -126,7 +140,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 <div style="margin:0 0 10px"><a class="hlink" href="#" id="plBack">← 戻る</a></div>
 <section class="panel plhead"><div class="plhead-l"><h2 id="plName" style="font-size:1.8rem;margin-bottom:6px"></h2><div class="muted" id="plMeta"></div></div><div id="plBadges"></div></section>
 <section class="panel"><div id="plPB"></div></section>
-<section class="panel" id="plAllPanel"><h2>競技履歴</h2><div class="field" style="max-width:320px"><select id="plEvent" aria-label="種目"></select></div><div class="field" style="max-width:320px;margin-top:10px"><select id="plFilter" aria-label="表示する記録"><option value="all">全ての記録</option><option value="prcr">PR・CRのみ</option><option value="cr">CRのみ</option></select></div><div id="plAll"></div></section>
+<section class="panel" id="plAllPanel"><h2>競技履歴</h2><div class="field" style="max-width:320px"><select id="plEvent" aria-label="種目"></select></div><div class="field" style="max-width:320px;margin-top:10px"><select id="plFilter" aria-label="表示する記録"><option value="all">全ての記録</option><option value="prcr">PR・CRのみ</option><option value="cr">CRのみ</option></select></div><div id="plPeriod" role="group" aria-label="期間" style="margin:4px 0 10px"></div><div id="plAll"></div></section>
 </div>
 <div id="pageRecords" style="display:none">
 <section class="panel">
@@ -135,15 +149,11 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
   <div class="field"><label for="rfEvent">種目</label><select id="rfEvent"></select></div>
   <div class="field"><label for="rfName">競技者名</label><input id="rfName" autocomplete="off" maxlength="80"></div>
  </div>
-  <div class="field" style="margin-bottom:8px"><label id="rfModeLabel">日付の絞り込み</label><input type="hidden" id="rfMode" value="day"><div class="seg sm" role="group" aria-labelledby="rfModeLabel"><button type="button" data-rfm="day">計測日</button><button type="button" data-rfm="range">期間</button></div></div>
-  <div id="rfQuick" class="row" style="display:none;margin:0 0 12px;flex-wrap:wrap;gap:6px"><button type="button" class="btn secondary sm" data-q="today">今日</button><button type="button" class="btn secondary sm" data-q="7">過去7日</button><button type="button" class="btn secondary sm" data-q="30">過去30日</button><button type="button" class="btn secondary sm" data-q="month">今月</button><button type="button" class="btn secondary sm" data-q="last">先月</button><button type="button" class="btn secondary sm" data-q="year">今年</button><button type="button" class="btn secondary sm" data-q="lyear">去年</button></div>
-  <div id="rfDateArea">
-   <div class="dg" id="rfDayBox"><label>計測日</label><div class="dgrow"><select id="rfDateY" aria-label="年"></select><select id="rfDateM" aria-label="月"></select><select id="rfDateD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfDate" aria-label="カレンダーで選ぶ"></label></div></div>
-   <div class="dg" id="rfFromBox" style="display:none"><label>開始日</label><div class="dgrow"><select id="rfFromY" aria-label="年"></select><select id="rfFromM" aria-label="月"></select><select id="rfFromD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfFrom" aria-label="カレンダーで選ぶ"></label></div></div>
-   <div class="dg" id="rfToBox" style="display:none"><label>終了日</label><div class="dgrow"><select id="rfToY" aria-label="年"></select><select id="rfToM" aria-label="月"></select><select id="rfToD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfTo" aria-label="カレンダーで選ぶ"></label></div></div>
-  </div>
-  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span></div>
- <div class="table-wrap"><table><thead><tr><th>競技日</th><th>種目</th><th>競技者</th><th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th><th></th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty" id="empty">記録はまだありません。</div></div>
+  <div class="field" style="margin-bottom:8px"><label for="rfSort">並び順</label><select id="rfSort"><option value="new">新しい順</option><option value="old">古い順</option><option value="best">ベスト順</option><option value="avg">平均順</option></select></div>
+  <div class="field" style="margin-bottom:8px"><label id="rfPLabel">期間</label><div id="rfPeriod" role="group" aria-labelledby="rfPLabel"></div></div>
+  <div id="rfChips" class="row" style="margin:0 0 8px;gap:6px"></div>
+  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span><span class="seg vsw" id="viewSw"><button type="button" data-v="table" title="表で表示" aria-label="表で表示"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button><button type="button" data-v="cards" title="カードで表示" aria-label="カードで表示"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></button></span></div>
+ <div class="table-wrap"><table class="cards"><thead><tr><th>競技日</th><th>種目</th><th>競技者</th><th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th><th></th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty" id="empty">記録はまだありません。</div></div>
 </section>
 <div id="recMoreRow" class="row" style="display:none;justify-content:center;margin:12px 0"><button class="btn secondary" type="button" id="recMore">もっと見る</button></div>
 <div class="rfoot"><button class="btn secondary sm" id="exportBtn2">CSV書き出し</button></div>
@@ -282,7 +292,7 @@ async function loadAll(force){
  finally{loading--}
 }
 setInterval(()=>{if(document.visibilityState==='visible')loadAll()},30000);
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const today=()=>{const p={};new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(x=>{p[x.type]=x.value});return `${p.year}-${p.month}-${p.day}`}; // 端末のタイムゾーンでなく日本時間の日付
 $('dayDate').value=today();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const FMC_EVENT='3x3x3 Fewest Moves';
@@ -375,6 +385,8 @@ function sortKey(r,forceAvg){
 function cmpKey(a,b){for(let i=0;i<Math.max(a.length,b.length);i++){const x=a[i]??0,y=b[i]??0;if(x<y)return -1;if(x>y)return 1}return 0}
 function renderDay(){
  const d=$('dayDate').value,list=records.filter(r=>r.date===d);
+ {let prev='',next='';for(const x of new Set(records.map(r=>r.date))){if(x<d&&(!prev||x>prev))prev=x;if(x>d&&(!next||x<next))next=x}
+  $('dayPrev').disabled=!d||!prev;$('dayNext').disabled=!d||!next;$('dayToday').disabled=d===today();$('dayPrev').dataset.to=prev;$('dayNext').dataset.to=next}
  if(!list.length){$('dayBody').innerHTML=`<div class="empty" style="display:block">${emptyRec()}</div>`;return}
  const groups=new Map();
  for(const r of list){const F=recordFormat(r),k=r.event+'\u0000'+fLabel(F);if(!groups.has(k))groups.set(k,{event:r.event,F,items:[]});groups.get(k).items.push(r)}
@@ -925,6 +937,8 @@ $('scrModal').addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeScrModal();closeDetail()}});
 $('dayDate').addEventListener('change',renderDay);
+for(const id of ['dayPrev','dayNext'])$(id).addEventListener('click',()=>{const t=$(id).dataset.to;if(t){$('dayDate').value=t;renderDay()}});
+$('dayToday').addEventListener('click',()=>{$('dayDate').value=today();renderDay()});
 let BADGES=new Map();
 function avgNum(r){
  if(r.attempts.some(a=>a.points!==undefined)||avgMode(recordFormat(r))==='none')return null;
@@ -1152,70 +1166,138 @@ function bdgHtml(name){
 }
 
 function render(){computeBadges();renderDay();renderCutech();if(curPg==='records')renderRecords()}
-const dp2=n=>String(n).padStart(2,'0');
-const DG={rfDate:{y:'',m:'',d:''},rfFrom:{y:'',m:'',d:''},rfTo:{y:'',m:'',d:''}};
 function setHtml(el,html){if(el.dataset.h!==html){el.innerHTML=html;el.dataset.h=html}}
-function fillDG(k){
- const g=DG[k],yrs=[...new Set(records.map(r=>r.date.slice(0,4)))];
- if(g.y&&!yrs.includes(g.y))yrs.push(g.y);
- yrs.sort().reverse();
- const inY=g.y?new Set(records.filter(r=>r.date.slice(0,4)===g.y).map(r=>r.date.slice(5,7))):null;
- let nd=31,inM=null;
- if(g.y&&g.m){nd=new Date(Number(g.y),Number(g.m),0).getDate();const pre=g.y+'-'+g.m;inM=new Set(records.filter(r=>r.date.slice(0,7)===pre).map(r=>r.date.slice(8,10)))}
- if(g.d&&Number(g.d)>nd)g.d='';
- let mo='<option value="">月</option>',da='<option value="">日</option>';
- for(let m=1;m<=12;m++){const v=dp2(m);mo+=`<option value="${v}"${g.m===v?' selected':''}${inY&&!inY.has(v)?' class="dim"':''}>${m}月</option>`}
- for(let d=1;d<=nd;d++){const v=dp2(d);da+=`<option value="${v}"${g.d===v?' selected':''}${inM&&!inM.has(v)?' class="dim"':''}>${d}日</option>`}
- setHtml($(k+'Y'),'<option value="">年</option>'+yrs.map(y=>`<option value="${y}"${g.y===y?' selected':''}>${y}年</option>`).join(''));
- setHtml($(k+'M'),mo);setHtml($(k+'D'),da);
- const v=g.y&&g.m&&g.d?`${g.y}-${g.m}-${g.d}`:'';if($(k).value!==v)$(k).value=v;
+// ---- 期間の絞り込み部品（記録一覧・競技履歴で共用）。日付はすべて日本時間の YYYY-MM-DD 文字列で扱う ----
+const ymdAdd=(s,n)=>{const[y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10)};
+const PERIODS=[['all','全期間'],['today','今日'],['7','過去7日'],['30','過去30日'],['month','今月'],['year','今年'],['custom','指定']];
+const PKEYS=PERIODS.map(x=>x[0]),YMD_RE=/^\d{4}-\d{2}-\d{2}$/;
+function periodRange(st){
+ const t=today(),[ty,tm]=t.split('-').map(Number),p=st.p,o=Math.min(0,Number(st.o)||0);
+ if(p==='today'){const d=ymdAdd(t,o);return{from:d,to:d}}
+ if(p==='7')return{from:ymdAdd(t,-6),to:t};
+ if(p==='30')return{from:ymdAdd(t,-29),to:t};
+ if(p==='month'){const i=ty*12+tm-1+o,y=Math.floor(i/12),m=i%12;return{from:`${y}-${pad2(m+1)}-01`,to:`${y}-${pad2(m+1)}-${pad2(new Date(Date.UTC(y,m+1,0)).getUTCDate())}`}}
+ if(p==='year'){const y=ty+o;return{from:`${y}-01-01`,to:`${y}-12-31`}}
+ if(p==='custom'){let f=st.from||'',e=st.to||'';const swapped=!!(f&&e&&f>e);if(swapped)[f,e]=[e,f];return{from:f,to:e,swapped}}
+ return{from:'',to:''};
 }
-for(const k of ['rfDate','rfFrom','rfTo']){
- for(const[s,f]of [['Y','y'],['M','m'],['D','d']])$(k+s).addEventListener('change',e=>{DG[k][f]=e.target.value;renderRecords()});
- $(k).addEventListener('change',e=>{const v=e.target.value;if(v){const[y,m,d]=v.split('-');DG[k]={y,m,d}}else DG[k]={y:'',m:'',d:''};renderRecords()});
+function periodLabel(st){
+ const t=today(),[ty,tm]=t.split('-').map(Number),p=st.p,o=Math.min(0,Number(st.o)||0);
+ if(p==='today'){const d=ymdAdd(t,o),[y,m,dd]=d.split('-').map(Number);return`${y!==ty?y+'年':''}${m}月${dd}日(${'日月火水木金土'[new Date(Date.UTC(y,m-1,dd)).getUTCDay()]})`}
+ if(p==='month'){const i=ty*12+tm-1+o;return`${Math.floor(i/12)}年${i%12+1}月`}
+ if(p==='year')return`${ty+o}年`;
+ if(p==='custom'){const r=periodRange(st);return r.from||r.to?`${r.from||'…'} 〜 ${r.to||'…'}`:'指定'}
+ return(PERIODS.find(x=>x[0]===p)||PERIODS[0])[1];
 }
-const dYmd=d=>`${d.getFullYear()}-${dp2(d.getMonth()+1)}-${dp2(d.getDate())}`;
-function setRange(a,b){const s=x=>{const[y,m,d]=x.split('-');return{y,m,d}};DG.rfFrom=s(a);DG.rfTo=s(b);renderRecords()}
-$('rfQuick').addEventListener('click',e=>{
- const q=e.target.dataset.q;if(!q)return;
- const t=new Date(),y=t.getFullYear(),m=t.getMonth(),back=n=>{const f=new Date(t);f.setDate(f.getDate()-n);return f};
- if(q==='today')setRange(dYmd(t),dYmd(t));
- else if(q==='7')setRange(dYmd(back(6)),dYmd(t));
- else if(q==='30')setRange(dYmd(back(29)),dYmd(t));
- else if(q==='month')setRange(dYmd(new Date(y,m,1)),dYmd(new Date(y,m+1,0)));
- else if(q==='last')setRange(dYmd(new Date(y,m-1,1)),dYmd(new Date(y,m,0)));
- else if(q==='year')setRange(`${y}-01-01`,`${y}-12-31`);
- else if(q==='lyear')setRange(`${y-1}-01-01`,`${y-1}-12-31`);
-});
+function mountPeriod(host,opt){
+ const S={p:'all',o:0,from:'',to:''},id=host.id;
+ host.classList.add('pf');
+ host.innerHTML=`<div class="row pf-btns" role="group" aria-label="期間">${PERIODS.map(([k,l])=>`<button type="button" class="btn secondary sm" data-p="${k}" aria-pressed="false">${l}</button>`).join('')}</div>`+
+  `<div class="row pf-nav" hidden><button type="button" class="btn secondary sm" data-nav="-1" aria-label="前へ">◀</button><strong class="pf-lab" role="status"></strong><button type="button" class="btn secondary sm" data-nav="1" aria-label="次へ">▶</button></div>`+
+  `<div class="pf-custom" hidden><div class="field"><label for="${id}From">開始日</label><input type="date" id="${id}From"></div><div class="field"><label for="${id}To">終了日</label><input type="date" id="${id}To"></div></div>`+
+  `<div class="muted pf-warn" role="status" hidden>開始日が終了日より後なので、入れ替えて絞り込んでいます</div>`;
+ const q=s=>host.querySelector(s),ins=host.querySelectorAll('.pf-custom input'),fi=ins[0],ti=ins[1],fin=()=>{try{opt.onChange&&opt.onChange()}catch(e){console.error(e)}};
+ const api={S,
+  range:()=>periodRange(S),
+  label:()=>periodLabel(S),
+  isDefault:()=>S.p==='all',
+  setBounds(min,max){fi.min=ti.min=min||'';fi.max=ti.max=max||''},
+  update(){
+   host.querySelectorAll('[data-p]').forEach(b=>{const on=b.dataset.p===S.p;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+   const nav=['today','month','year'].includes(S.p);
+   q('.pf-nav').hidden=!nav;if(nav){q('.pf-lab').textContent=periodLabel(S);q('[data-nav="1"]').disabled=S.o>=0}
+   q('.pf-custom').hidden=S.p!=='custom';
+   if(fi.value!==S.from)fi.value=S.from;if(ti.value!==S.to)ti.value=S.to;
+   q('.pf-warn').hidden=!(S.p==='custom'&&periodRange(S).swapped);
+  },
+  set(s){s=s||{};S.p=PKEYS.includes(s.p)?s.p:'all';const o=Math.trunc(Number(s.o));S.o=Number.isFinite(o)&&o<0?Math.max(o,-5000):0;S.from=YMD_RE.test(s.from)?s.from:'';S.to=YMD_RE.test(s.to)?s.to:'';api.update()},
+  reset(){api.set({})}
+ };
+ host.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!host.contains(b))return;
+  if(b.dataset.p){S.p=b.dataset.p;S.o=0;api.update();fin()}
+  else if(b.dataset.nav){const n=Number(b.dataset.nav);if(n>0&&S.o>=0)return;S.o=Math.min(0,S.o+n);api.update();fin()}
+ });
+ fi.addEventListener('change',()=>{S.from=fi.value;api.update();fin()});
+ ti.addEventListener('change',()=>{S.to=ti.value;api.update();fin()});
+ api.update();
+ return api;
+}
+// ---- 記録一覧の絞り込み ----
+const RF_KEY='cutech-rec-filter-v1',RF_SORTS={new:'新しい順',old:'古い順',best:'ベスト順',avg:'平均順'};
+const PF=mountPeriod($('rfPeriod'),{onChange:()=>{renderRecords();rfPersist()}});
+let wantEv='';   // 保存された種目（データの読み込み前は選択肢がないので、読み込めるまで覚えておく）
+function rfGet(){const s=PF.S;return{ev:$('rfEvent').value||wantEv,q:$('rfName').value,p:s.p,o:s.o,from:s.from,to:s.to,sort:$('rfSort').value}}
+function rfApply(s){
+ s=s||{};wantEv=typeof s.ev==='string'?s.ev:'';$('rfName').value=typeof s.q==='string'?s.q.slice(0,80):'';
+ PF.set(s);$('rfSort').value=Object.prototype.hasOwnProperty.call(RF_SORTS,s.sort)?s.sort:'new';$('rfEvent').value=wantEv;   // 選択肢にない種目は空欄になる（wantEv が覚えている）
+}
+function rfParams(s){
+ const p={};if(s.ev)p.ev=s.ev;if(s.q)p.q=s.q;if(s.p!=='all')p.p=s.p;
+ if(['today','month','year'].includes(s.p)&&s.o)p.o=String(s.o);
+ if(s.p==='custom'){if(s.from)p.from=s.from;if(s.to)p.to=s.to}
+ if(s.sort!=='new')p.sort=s.sort;return p;
+}
+let rfTimer=0;
+function rfPersist(){
+ clearTimeout(rfTimer);
+ rfTimer=setTimeout(()=>{
+  const s=rfGet();
+  try{localStorage.setItem(RF_KEY,J(s))}catch{}
+  try{if(isGAS&&google.script.history&&google.script.history.replace)google.script.history.replace(null,rfParams(s))}catch{}
+ },250);
+}
+try{rfApply(JSON.parse(localStorage.getItem(RF_KEY)||'null'))}catch{rfApply({})}
+try{
+ if(isGAS&&google.script.url&&google.script.url.getLocation)google.script.url.getLocation(loc=>{
+  try{
+   const pr=(loc&&loc.parameter)||{},g=k=>{const v=pr[k];return Array.isArray(v)?v[0]:v},keys=['ev','q','p','o','from','to','sort'];
+   if(!keys.some(k=>g(k)))return;   // URLに値があれば、保存された状態より優先する（URLにない項目は既定値）
+   rfApply({ev:g('ev')||'',q:g('q')||'',p:g('p'),o:g('o'),from:g('from'),to:g('to'),sort:g('sort')});
+   if(curPg==='records')renderRecords();
+  }catch(e){console.error(e)}
+ });
+}catch{}
+const bestKey=r=>{const k=sortKey(r);return k.length===2?[k[1]]:k};   // タイムの解釈は既存の sortKey を使う（平均付きの形式は [平均, ベスト] が返る）
 const REC_PAGE=50;let recLimit=REC_PAGE,recSig='';
 function renderRecords(){
- const sel=$('rfEvent'),prev=sel.value,present=cutechEvents().filter(e=>records.some(r=>r.event===e));
+ const sel=$('rfEvent'),present=cutechEvents().filter(e=>records.some(r=>r.event===e)),want=sel.value||wantEv;
  sel.innerHTML='<option value="">すべての種目</option>'+present.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
- sel.value=present.includes(prev)?prev:'';
- const range=$('rfMode').value==='range';
- document.querySelectorAll('[data-rfm]').forEach(b=>{const on=b.dataset.rfm===$('rfMode').value;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
- $('rfDayBox').style.display=range?'none':'';$('rfFromBox').style.display=range?'':'none';$('rfToBox').style.display=range?'':'none';
- fillDG('rfDate');fillDG('rfFrom');fillDG('rfTo');
- $('rfQuick').style.display=range?'flex':'none';
- const ev=sel.value,q=$('rfName').value.trim().toLowerCase(),g=DG.rfDate;
- const bound=(x,hi)=>{if(!x.y)return'';const m=x.m||(hi?'12':'01');const d=x.d||(hi?dp2(new Date(Number(x.y),Number(m),0).getDate()):'01');return`${x.y}-${m}-${d}`};
- let from=bound(DG.rfFrom,false),to=bound(DG.rfTo,true);if(from&&to&&from>to)[from,to]=[to,from];
- const inDate=r=>range?((!from||r.date>=from)&&(!to||r.date<=to)):((!g.y||r.date.slice(0,4)===g.y)&&(!g.m||r.date.slice(5,7)===g.m)&&(!g.d||r.date.slice(8,10)===g.d));
+ sel.value=present.includes(want)?want:'';
+ if(dataLoaded)wantEv='';
+ const dates=records.map(r=>r.date).sort();PF.setBounds(dates[0],dates[dates.length-1]);PF.update();
+ const ev=sel.value,qraw=$('rfName').value.trim(),q=qraw.toLowerCase(),sort=$('rfSort').value,{from,to}=PF.range();
  const ord=new Map(records.map((r,i)=>[r.id,i]));
- const list=records.filter(r=>inDate(r)&&(!ev||r.event===ev)&&(!q||r.name.toLowerCase().includes(q)))
-  .sort((a,b)=>b.date.localeCompare(a.date)||(a.createdAt&&b.createdAt?String(b.createdAt).localeCompare(String(a.createdAt)):0)||ord.get(a.id)-ord.get(b.id));
+ const newer=(a,b)=>b.date.localeCompare(a.date)||(a.createdAt&&b.createdAt?String(b.createdAt).localeCompare(String(a.createdAt)):0)||ord.get(a.id)-ord.get(b.id);
+ let list=records.filter(r=>(!from||r.date>=from)&&(!to||r.date<=to)&&(!ev||r.event===ev)&&(!q||r.name.toLowerCase().includes(q)));
+ if(sort==='old')list.sort((a,b)=>newer(b,a));
+ else if(sort==='best'||sort==='avg'){const kf=sort==='best'?bestKey:r=>sortKey(r,true),ks=new Map(list.map(r=>[r.id,kf(r)]));list.sort((a,b)=>cmpKey(ks.get(a.id),ks.get(b.id))||newer(a,b))}
+ else list.sort(newer);
  $('empty').textContent=!dataLoaded?'記録を読み込み中…':records.length?'条件に合う記録がありません。':'記録はまだありません。';
  $('empty').style.display=list.length?'none':'block';
- const sig=J([range,from,to,g.y,g.m,g.d,ev,q]);if(sig!==recSig){recSig=sig;recLimit=REC_PAGE}
+ const sig=J([from,to,ev,q,sort]);if(sig!==recSig){recSig=sig;recLimit=REC_PAGE}
  const shown=list.slice(0,recLimit);
+ const chips=[];
+ if(ev)chips.push(['ev','種目：'+ev]);if(qraw)chips.push(['q','競技者：'+qraw]);
+ if(PF.S.p!=='all'&&(PF.S.p!=='custom'||from||to))chips.push(['p','期間：'+PF.label()]);
+ if(sort!=='new')chips.push(['sort','並び順：'+RF_SORTS[sort]]);
+ setHtml($('rfChips'),chips.map(([k,t])=>`<span class="fchip">${esc(t)}<button type="button" data-chip="${k}" aria-label="${esc(t)}を外す">×</button></span>`).join(''));
+ $('rfClear').disabled=!chips.length;
  $('rfCount').textContent=dataLoaded?`${list.length}件`+(list.length!==records.length?`（全${records.length}件）`:'')+(list.length>shown.length?`　${shown.length}件を表示中`:''):'';
  $('recMoreRow').style.display=list.length>shown.length?'flex':'none';
  $('recMore').textContent=`もっと見る（残り${list.length-shown.length}件）`;
- $('recordRows').innerHTML=shown.map(r=>`<tr><td>${esc(r.date)}</td><td>${evShort(r.event)}</td><td>${plink(r.name)}</td><td>${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td>${a?`<button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button>`:'—'}</td>`}).join('')}<td><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td>${esc(r.worst)}</td><td><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td></td></tr>`).join('');
+ const L=['競技日','種目','競技者','形式','1回目','2回目','3回目','4回目','5回目','ベスト','ワースト','平均'];
+ $('recordRows').innerHTML=shown.map(r=>`<tr><td data-label="${L[0]}">${esc(r.date)}</td><td data-label="${L[1]}">${evShort(r.event)}</td><td data-label="${L[2]}">${plink(r.name)}</td><td data-label="${L[3]}">${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return a?`<td class="c-att" data-label="${L[4+k]}"><button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button></td>`:`<td class="na" data-label="${L[4+k]}">—</td>`}).join('')}<td class="c-best" data-label="${L[9]}"><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td class="c-worst" data-label="${L[10]}">${esc(r.worst)}</td><td class="c-avg" data-label="${L[11]}"><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td></td><td class="brk brk1" aria-hidden="true"></td><td class="brk brk2" aria-hidden="true"></td></tr>`).join('');
 }
-document.querySelectorAll('[data-rfm]').forEach(b=>b.addEventListener('click',()=>{$('rfMode').value=b.dataset.rfm;renderRecords()}));
-$('rfEvent').addEventListener('change',renderRecords);$('rfName').addEventListener('input',renderRecords);
-$('rfClear').addEventListener('click',()=>{$('rfMode').value='day';for(const k of ['rfDate','rfFrom','rfTo'])DG[k]={y:'',m:'',d:''};$('rfEvent').value='';$('rfName').value='';renderRecords()});
+$('rfEvent').addEventListener('change',()=>{wantEv='';renderRecords();rfPersist()});
+$('rfName').addEventListener('input',()=>{renderRecords();rfPersist()});
+$('rfSort').addEventListener('change',()=>{renderRecords();rfPersist()});
+$('rfChips').addEventListener('click',e=>{
+ const b=e.target.closest('[data-chip]');if(!b)return;const k=b.dataset.chip;
+ if(k==='ev'){wantEv='';$('rfEvent').value=''}else if(k==='q')$('rfName').value='';else if(k==='p')PF.reset();else if(k==='sort')$('rfSort').value='new';
+ renderRecords();rfPersist();
+});
+$('rfClear').addEventListener('click',()=>{wantEv='';$('rfEvent').value='';$('rfName').value='';PF.reset();$('rfSort').value='new';renderRecords();rfPersist()});
 $('recordRows').addEventListener('click',e=>{const ab=e.target.closest('.att-btn');if(!ab)return;const r=records.find(x=>x.id===ab.dataset.rid);if(r)openScrModal(r,Number(ab.dataset.ai))});
 $('recMore').addEventListener('click',()=>{recLimit+=REC_PAGE;renderRecords()});
 const plink=n=>`<a class="plink" href="#player=${encodeURIComponent(n)}">${esc(n)}</a>`;
@@ -1238,17 +1320,19 @@ function renderPlayer(){
  const cntOf=e=>mine.filter(r=>r.event===e).length,bestRank=e=>{const s=cutechRows(e,true).find(f),a=cutechRows(e,false).find(f);return Math.min(s?s.rank:Infinity,a?a.rank:Infinity)};
  let def=evs[0];for(const e of evs){if(cntOf(e)>cntOf(def)||(cntOf(e)===cntOf(def)&&bestRank(e)<bestRank(def)))def=e}
  sel.value=(plLast===name&&(cur==='__all__'||evs.includes(cur)))?cur:def;
- if(plLast!==name){plFilter='all';$('plFilter').value='all'}
+ if(plLast!==name){plFilter='all';$('plFilter').value='all';PP.reset()}
  plLast=name;
  renderPlayerAll(mine);
 }
 let plLast='',plFilter='all';
+const PP=mountPeriod($('plPeriod'),{onChange:()=>renderPlayerAll(records.filter(r=>r.name.trim()===curPlayer.trim()))});
 function renderPlayerAll(mine){
  const ev=$('plEvent').value;
  if(!ev){$('plAll').innerHTML='';return}
+ const pd=mine.map(r=>r.date).sort();PP.setBounds(pd[0],pd[pd.length-1]);PP.update();const{from:pf,to:pt}=PP.range();
  const ord=new Map(records.map((r,i)=>[r.id,i]));
   const hit=r=>{const o=BADGES.get(r.id);if(!o)return false;const ls=[o.s,o.a].filter(Boolean);return plFilter==='cr'?ls.some(l=>l.startsWith('CR')):ls.length>0};
- const all=ev==='__all__',list=mine.filter(r=>(all||r.event===ev)&&(plFilter==='all'||hit(r))).sort((a,b)=>b.date.localeCompare(a.date)||ord.get(a.id)-ord.get(b.id));
+ const all=ev==='__all__',list=mine.filter(r=>(all||r.event===ev)&&(plFilter==='all'||hit(r))&&(!pf||r.date>=pf)&&(!pt||r.date<=pt)).sort((a,b)=>b.date.localeCompare(a.date)||ord.get(a.id)-ord.get(b.id));
  const body=list.map(r=>`<tr class="ct-row" data-rid="${esc(r.id)}"><td style="white-space:nowrap">${esc(r.date)}</td>${all?`<td style="white-space:nowrap"><strong>${evShort(r.event)}</strong></td>`:''}<td style="white-space:nowrap">${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td>${a?attHtml(r,k):'—'}</td>`}).join('')}<td><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td>${esc(r.worst)}</td><td><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td></tr>`).join('');
  $('plAll').innerHTML=`<div class="muted" style="margin:2px 0 8px">${list.length}件</div><div class="table-wrap"><table><thead><tr><th>競技日</th>${all?'<th>種目</th>':''}<th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th></tr></thead><tbody>${body}</tbody></table></div>`;
 }
@@ -1413,6 +1497,12 @@ document.addEventListener('touchstart',function(){},{passive:true});
 
 // 指で操作する端末では、長押しメニューを出さない（入力欄・スクランブルや解答の文字は除く）
 document.addEventListener('contextmenu',e=>{if(matchMedia('(pointer:coarse)').matches&&!e.target.closest('input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody'))e.preventDefault()});
+
+{const KEY='cutech-rec-view-v1',tb=document.querySelector('#pageRecords table'),sw=document.getElementById('viewSw');
+const setV=(v,save)=>{tb.classList.toggle('cards',v==='cards');sw.querySelectorAll('button').forEach(b=>{const on=b.dataset.v===v;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});if(save){try{localStorage.setItem(KEY,v)}catch{}}};
+let sv=null;try{sv=localStorage.getItem(KEY)}catch{}
+setV(sv==='table'?'table':'cards',false);
+sw.addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(b)setV(b.dataset.v,true)})}
 </script>
 </body>
 </html>
