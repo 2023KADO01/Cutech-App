@@ -364,6 +364,7 @@ function apply(ops, auth, dev) {
       pruneLog_();
       props_().setProperty('REV', String(rev));   // 最後に更新（読む側は完成した履歴だけを見る）
       setMeta_(rev, minRev_());
+      props_().setProperty('LAST_CHANGE_AT', String(Date.now()));   // バックアップの一時停止の判定用（版番号が上がった時刻）
       resumeBackupIfPaused_();
     }
     SpreadsheetApp.flush();
@@ -621,39 +622,120 @@ function devTag_(dev) {
 
 /* ---------- バックアップ ---------- */
 const BACKUP_FOLDER_NAME = 'Cutech Log バックアップ';
-const BACKUP_KEEP = 30;           // 新しい順にこの件数だけ残し、古いものはゴミ箱へ
+const BACKUP_PREFIX = 'Cutech Log ';           // バックアップのファイル名の先頭（これで始まるスプレッドシートだけを世代管理の対象にする）
+const BACKUP_KEEP_DAYS = 14;      // 作成日時がこの日数以内のバックアップは、すべて残す
+const BACKUP_KEEP_WEEKS = 12;     // それより古いものは、7日ごとの区切りで一番新しい1件だけを、新しい区切りからこの区切り数だけ残す
 const BACKUP_IDLE_WEEKS = 15;     // これだけ変更がなければ自動バックアップを一時停止する
+const BACKUP_DAY_MS = 24 * 3600 * 1000;
 
-// 1回だけ実行する。毎週月曜の午前3時台に backup を動かすトリガーを作り直す
-// （以前に作ったバックアップ用のトリガーは、ここで置き換えられる）。
+// 1回だけ実行する。毎日の午前3時台に backup を動かすトリガーを作り直す
+// （以前に作ったバックアップ用のトリガー（週1回のものも）は、ここで置き換えられる）。
 function setupBackupTrigger() {
   createBackupTrigger_();
   props_().deleteProperty('BACKUP_PAUSED');
 }
 
-// スプレッドシートのコピーをドライブに作る。週1回、トリガーで自動実行される。
+// データのシートだけを新しいスプレッドシートに書き写して、バックアップ用フォルダに置く。
+// 毎日トリガーで自動実行されるが、前回のバックアップ以降にデータが変わっていなければ作らない。
 // 手動で実行したときは、変更がなくても必ずバックアップを作る。
 function backup(e) {
-  const ss = SpreadsheetApp.getActive();
-  const file = DriveApp.getFileById(ss.getId());
   const auto = !!(e && e.triggerUid);
-  if (auto && Date.now() - file.getLastUpdated().getTime() >= BACKUP_IDLE_WEEKS * 7 * 24 * 3600 * 1000) {
-    pauseBackup_();   // 長い間変更がないので、自動バックアップを一時停止する
-    return;
+  const rev = rev_();
+  if (auto) {
+    const p = props_();
+    const at = Number(p.getProperty('LAST_CHANGE_AT') || 0);
+    const changed = at || DriveApp.getFileById(SpreadsheetApp.getActive().getId()).getLastUpdated().getTime();
+    if (Date.now() - changed >= BACKUP_IDLE_WEEKS * 7 * BACKUP_DAY_MS) {
+      pauseBackup_();   // 長い間変更がないので、自動バックアップを一時停止する
+      return;
+    }
+    const last = p.getProperty('BACKUP_LAST_REV');
+    if (last !== null && Number(last) === rev) return;   // 前回のバックアップから変更なし
+  }
+  // 書き込みの途中のシートを写さないよう、apply と同じロックを取ってから書き写す
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    makeBackup_(BACKUP_PREFIX);
+    props_().setProperty('BACKUP_LAST_REV', String(rev));   // コピー前の版番号を控える
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// 今のデータのシートを新しいスプレッドシート「prefix + yyyyMMdd-HHmm」に書き写し、バックアップ用フォルダへ移して、古い世代を片付ける。
+function makeBackup_(prefix) {
+  const src = SpreadsheetApp.getActive();
+  const stamp = Utilities.formatDate(new Date(), APP_TZ, 'yyyyMMdd-HHmm');
+  const ss = SpreadsheetApp.create(prefix + stamp);
+  const first = ss.getSheets()[0];   // 最初からある空のシート（コピー後に消す）
+  Object.keys(SHEETS).forEach(name => {
+    const s = src.getSheetByName(name);
+    if (!s) return;
+    s.copyTo(ss).setName(name);      // copyTo は「〜のコピー」という名前になるので戻す
+  });
+  if (ss.getSheets().length > 1) ss.deleteSheet(first);
+  const folder = backupFolder_(true);
+  DriveApp.getFileById(ss.getId()).moveTo(folder);
+  pruneBackups_(folder);
+}
+
+// バックアップ用フォルダを返す。IDを控えてあればそれを使い、なければ（見つからない・ゴミ箱のときも）名前で探す（create なら無ければ作る）。
+function backupFolder_(create) {
+  const p = props_();
+  const id = p.getProperty('BACKUP_FOLDER_ID');
+  if (id) {
+    try {
+      const f = DriveApp.getFolderById(id);
+      if (!f.isTrashed()) return f;
+    } catch (err) { /* 見つからないときは名前で探す */ }
   }
   const it = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
-  const folder = it.hasNext() ? it.next() : DriveApp.createFolder(BACKUP_FOLDER_NAME);
-  const stamp = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd-HHmm');
-  file.makeCopy('Cutech Log ' + stamp, folder);
+  let folder = null;
+  while (it.hasNext()) {
+    const f = it.next();
+    if (!f.isTrashed()) { folder = f; break; }
+  }
+  if (!folder && create) folder = DriveApp.createFolder(BACKUP_FOLDER_NAME);
+  if (folder) p.setProperty('BACKUP_FOLDER_ID', folder.getId());
+  return folder;
+}
+
+// フォルダ内のバックアップ（名前が BACKUP_PREFIX で始まる Google スプレッドシート）だけを、新しい順に返す。
+function backupFiles_(folder) {
   const files = [], fi = folder.getFiles();
-  while (fi.hasNext()) files.push(fi.next());
+  while (fi.hasNext()) {
+    const f = fi.next();
+    if (f.getMimeType() === MimeType.GOOGLE_SHEETS && f.getName().indexOf(BACKUP_PREFIX) === 0) files.push(f);
+  }
   files.sort((a, b) => b.getDateCreated() - a.getDateCreated());
-  files.slice(BACKUP_KEEP).forEach(f => f.setTrashed(true));
+  return files;
+}
+
+// 世代管理：残すもの以外のバックアップをゴミ箱へ入れる。
+function pruneBackups_(folder) {
+  selectBackupsToTrash_(backupFiles_(folder), Date.now()).forEach(f => f.setTrashed(true));
+}
+// files（新しい順）のうち、捨てるものを返す。
+//   ・作成日時が BACKUP_KEEP_DAYS 日以内：すべて残す
+//   ・それより古いもの：7日ごとの区切りで一番新しい1件だけを、新しい区切りから BACKUP_KEEP_WEEKS 区切り分まで残す
+function selectBackupsToTrash_(files, now) {
+  const WEEK = 7 * BACKUP_DAY_MS, border = now - BACKUP_KEEP_DAYS * BACKUP_DAY_MS;
+  const sorted = files.slice().sort((a, b) => b.getDateCreated() - a.getDateCreated());
+  const keepBuckets = new Set(), trash = [];
+  for (const f of sorted) {
+    const t = f.getDateCreated().getTime();
+    if (t >= border) continue;
+    const b = Math.floor(t / WEEK);
+    if (!keepBuckets.has(b) && keepBuckets.size < BACKUP_KEEP_WEEKS) keepBuckets.add(b);   // 区切りの中で最初に出会う＝一番新しい
+    else trash.push(f);
+  }
+  return trash;
 }
 
 function createBackupTrigger_() {
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'backup').forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('backup').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(3).create();
+  ScriptApp.newTrigger('backup').timeBased().everyDays(1).atHour(3).create();
 }
 function pauseBackup_() {
   ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'backup').forEach(t => ScriptApp.deleteTrigger(t));
@@ -668,13 +750,63 @@ function resumeBackupIfPaused_() {
   } catch (err) { /* 権限がない場合などは無視（データの保存には影響させない） */ }
 }
 
-// バックアップや版の履歴からデータを戻したあとに1回だけ実行する。
+// バックアップの一覧（新しい順）を、名前とファイルIDでログに出す。エディタから実行して確認する。
+// 戻したいバックアップのファイルIDを、スクリプト プロパティ RESTORE_FILE_ID に設定してから restoreBackup を実行する。
+function listBackups() {
+  const folder = backupFolder_(false);
+  if (!folder) { Logger.log('バックアップ用フォルダが見つかりません'); return; }
+  const files = backupFiles_(folder);
+  if (!files.length) { Logger.log('バックアップがありません'); return; }
+  files.forEach(f => Logger.log(f.getName() + '  ' + f.getId()));
+}
+
+// バックアップからデータを戻す。使い方：
+//   1. listBackups を実行し、戻したいバックアップのファイルIDを調べる。
+//   2. スクリプト プロパティ RESTORE_FILE_ID にそのIDを設定する。
+//   3. エディタから restoreBackup を実行する（戻す前の状態は「Cutech Log 復元前 …」として控えを作る）。
+// 戻すのは records, names, scrambles, events, badges。changes と meta は戻さず、変更履歴を空にして全員が全件を読み直す。
+function restoreBackup() {
+  const id = props_().getProperty('RESTORE_FILE_ID');
+  if (!id) throw new Error('スクリプト プロパティ RESTORE_FILE_ID に、戻したいバックアップのファイルIDを設定してください（一覧は listBackups で確認できます）');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const bk = SpreadsheetApp.openById(id);   // 先に開けることを確認する（開けなければここで止まる）
+    makeBackup_(BACKUP_PREFIX + '復元前 ');
+    let n = 0;
+    ['records', 'names', 'scrambles', 'events', 'badges'].forEach(name => {
+      const s = bk.getSheetByName(name);
+      if (!s) { Logger.log(name + '：バックアップにシートがないため、そのままにしました'); return; }
+      const last = s.getLastRow();
+      const rows = last < 2 ? [] : s.getRange(2, 1, last - 1, SHEETS[name].length).getValues();
+      writeRows_(name, rows, false);
+      n++;
+      Logger.log(name + '：' + rows.length + '行を戻しました');
+    });
+    resetAfterRestore_();
+    SpreadsheetApp.flush();
+    resumeBackupIfPaused_();
+    props_().deleteProperty('RESTORE_FILE_ID');
+    Logger.log('復元しました（' + n + '個のシート）');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// バックアップや版の履歴からデータを戻したあとに1回だけ実行する（restoreBackup は自動で行う）。
 // 開いている画面が古い状態のまま残らないよう、全員が全件を読み直すようにする。
 function resetAfterRestore() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try { resetAfterRestore_(); } finally { lock.releaseLock(); }
+}
+// ロックを取っている前提の本体
+function resetAfterRestore_() {
   const s = sh_('changes');
   if (s.getLastRow() > 1) s.deleteRows(2, s.getLastRow() - 1);
   const rev = rev_() + 1;
   props_().setProperty('REV', String(rev));
   props_().setProperty('MINREV', String(rev));
+  props_().setProperty('LAST_CHANGE_AT', String(Date.now()));
   setMeta_(rev, rev);
 }
