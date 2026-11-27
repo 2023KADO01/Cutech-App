@@ -30,12 +30,29 @@ body:not(.is-admin) .admin-only{display:none!important}#syncBar{display:none;pos
 .seg.sm{display:inline-flex;align-self:flex-start;min-height:0;padding:3px;flex:none}.seg.sm button{padding:6px 18px;white-space:nowrap;flex:none}
 input[type=checkbox]{width:18px;height:18px;padding:0;margin:0;accent-color:var(--accent);cursor:pointer;flex:none}
 #pageRecords th,#recordRows td:nth-child(2){white-space:nowrap}
-.dg{margin-bottom:12px}.dg>label{display:block;font-size:.86rem;color:var(--muted);margin-bottom:6px}
-.dgrow{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px}
-.dgrow select{padding:12px 22px 12px 8px;background-position:right 6px center;min-width:0;font-size:.95rem}
-.calbtn{position:relative;display:flex;align-items:center;justify-content:center;width:46px;border:1px solid var(--field-line);border-radius:10px;background:var(--field);cursor:pointer;overflow:hidden;font-size:1.1rem}
-.calbtn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;border:0;cursor:pointer}
-select option.dim{color:var(--muted);opacity:.5}
+#rfPeriod{gap:6px;margin:0 0 8px}#rfPeriod .btn.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}.rfnav{display:flex;align-items:center;justify-content:flex-start;gap:6px;margin:0 0 12px;font-weight:700}.rfnav #rfNavLabel{min-width:9em;text-align:center}.rfnav .btn:disabled{opacity:.4;cursor:default}
+#toasts{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;padding:0 16px;pointer-events:none}
+.toast{pointer-events:auto;box-sizing:border-box;width:480px;max-width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:14px;padding:10px 16px;font-size:.92rem;box-shadow:var(--shadow);white-space:pre-line;line-height:1.5;text-align:center;overflow-wrap:anywhere}.toast.ok{border-left-color:#2a9d5c}.toast.err{border-left-color:#d33;cursor:pointer}
+#recTable td.brk{display:none}.rfbar #rfCount{margin-right:auto}.rfbar .btn.sm{flex:none}
+@media(max-width:640px){.rfbar{gap:8px}.rfbar #rfCount{margin-right:0}.rfbar .btn.sm{padding:9px 12px}.rfbar .admin-only{order:3}}
+@media(max-width:640px){
+#recTable thead,#recTable thead tr,#recTable,#recTable tbody,#recTable tr,#recTable td{display:block}#recTable thead tr{border:0;padding:0;margin:0 0 8px;background:none}#recTable thead th{display:none;border:0}#recTable thead th.admin-only{display:flex;align-items:center;gap:8px;padding:4px 2px}#recTable thead th.admin-only::after{content:'表示中の記録をすべて選択';font-size:.85rem;color:var(--text)}body:not(.is-admin) #recTable td.c-act{display:none}
+#recTable tr{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:10px;background:var(--panel)}
+#recTable td{display:block;flex:none;padding:3px 0;border:0;white-space:normal;text-align:left;min-width:0}
+#recTable td::before{content:none}
+#recTable td.brk{display:block;flex:0 0 100%;padding:0;height:0}
+#recTable td:nth-child(n+2):nth-child(-n+5){order:1}
+#recTable td.brk1{order:2}
+#recTable td.c-best,#recTable td.c-avg{order:3;font-size:1.2rem;padding:6px 0 4px;white-space:nowrap}
+#recTable td.c-best::before,#recTable td.c-avg::before{content:attr(data-label);color:var(--muted);font-weight:700;font-size:.78rem;margin-right:6px}
+#recTable td.brk2{order:4}
+#recTable td.c-att{order:5;padding:2px 0}
+#recTable td.brk3{order:6}
+#recTable td.c-worst{display:none}
+#recTable td.c-sel{order:7;align-self:center;margin-right:auto;padding:4px 14px 4px 0;display:flex;align-items:center}#recTable td.c-sel input{width:24px;height:24px}
+#recTable td.c-act{order:7;align-self:center;padding:4px 0 0}#recTable td.c-act .btn{padding:9px 14px}
+#recTable td.na{display:none}
+}
 .p2:disabled{opacity:.4;cursor:default}.p2.dnf[data-st="DNS"]{background:var(--muted);border-color:var(--muted)}.attempt input:disabled,.attempt textarea:disabled{opacity:.5}
 @media(max-width:480px){.attempt{grid-template-columns:minmax(0,1fr) auto auto auto}.attempt label{grid-column:1/-1}.p2{padding:10px 12px}}
 .scs .exl{margin:4px 0 0;padding-left:0;list-style:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;word-break:break-word}
@@ -67,8 +84,8 @@ body.scr-list .scr-input-only{display:none!important}
 :root{--press:brightness(.74) saturate(1.15)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--press:brightness(1.6)}}
 :root[data-theme="dark"]{--press:brightness(1.6)}
-button,a,.btn,.att-btn,.p2,.calbtn,.rn-item,.ct-row,.isel-btn,.isel-opt,.sq1-ud,.sq1-lr,.seg button,.chip button{touch-action:manipulation;transition:filter .12s ease,transform .12s ease}
-button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active,.p2:active,.calbtn:active,.isel-btn:active,.sq1-ud:active,.sq1-lr:active,.seg button:active,.chip button:active,[role="button"]:active{filter:var(--press);transform:scale(.96);transition-duration:0s}
+button,a,.btn,.att-btn,.p2,.rn-item,.ct-row,.isel-btn,.isel-opt,.sq1-ud,.sq1-lr,.seg button,.chip button{touch-action:manipulation;transition:filter .12s ease,transform .12s ease}
+button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active,.p2:active,.isel-btn:active,.sq1-ud:active,.sq1-lr:active,.seg button:active,.chip button:active,[role="button"]:active{filter:var(--press);transform:scale(.96);transition-duration:0s}
 .rn-item:active,.ct-row:active,.isel-opt:active{filter:var(--press);transition-duration:0s}
 .evrow{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--field)}
 .evrow-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -318,16 +335,14 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
  <div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
   <div class="field"><label for="rfEvent">種目</label><select id="rfEvent"></select></div>
   <div class="field"><label for="rfName">競技者名</label><input id="rfName" autocomplete="off" maxlength="80"></div>
+  <div class="field"><label for="rfSort">並び順</label><select id="rfSort"><option value="new">新しい順</option><option value="old">古い順</option><option value="best">ベスト順</option><option value="avg">平均順</option></select></div>
  </div>
-  <div class="field" style="margin-bottom:8px"><label id="rfModeLabel">日付の絞り込み</label><input type="hidden" id="rfMode" value="day"><div class="seg sm" role="group" aria-labelledby="rfModeLabel"><button type="button" data-rfm="day">計測日</button><button type="button" data-rfm="range">期間</button></div></div>
-  <div id="rfQuick" class="row" style="display:none;margin:0 0 12px;flex-wrap:wrap;gap:6px"><button type="button" class="btn secondary sm" data-q="today">今日</button><button type="button" class="btn secondary sm" data-q="7">過去7日</button><button type="button" class="btn secondary sm" data-q="30">過去30日</button><button type="button" class="btn secondary sm" data-q="month">今月</button><button type="button" class="btn secondary sm" data-q="last">先月</button><button type="button" class="btn secondary sm" data-q="year">今年</button><button type="button" class="btn secondary sm" data-q="lyear">去年</button></div>
-  <div id="rfDateArea">
-   <div class="dg" id="rfDayBox"><label>計測日</label><div class="dgrow"><select id="rfDateY" aria-label="年"></select><select id="rfDateM" aria-label="月"></select><select id="rfDateD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfDate" aria-label="カレンダーで選ぶ"></label></div></div>
-   <div class="dg" id="rfFromBox" style="display:none"><label>開始日</label><div class="dgrow"><select id="rfFromY" aria-label="年"></select><select id="rfFromM" aria-label="月"></select><select id="rfFromD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfFrom" aria-label="カレンダーで選ぶ"></label></div></div>
-   <div class="dg" id="rfToBox" style="display:none"><label>終了日</label><div class="dgrow"><select id="rfToY" aria-label="年"></select><select id="rfToM" aria-label="月"></select><select id="rfToD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfTo" aria-label="カレンダーで選ぶ"></label></div></div>
-  </div>
-  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span><button class="btn secondary sm admin-only" type="button" id="selSameDev" disabled style="margin-left:auto">同じ端末の記録をすべて選択</button><button class="btn danger sm admin-only" type="button" id="bulkDelRec" disabled style="margin-left:8px">選択した記録を一括削除</button></div>
- <div class="table-wrap"><table><thead><tr><th class="admin-only"><input type="checkbox" id="selAllRec" aria-label="表示中の記録をすべて選択"></th><th>競技日</th><th>種目</th><th>競技者</th><th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th><th></th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty" id="empty">記録はまだありません。</div></div>
+  <div class="field" style="margin-bottom:8px"><label id="rfPLabel">期間</label><div class="row pf-btns" role="group" aria-labelledby="rfPLabel" id="rfPeriod"><button type="button" class="btn secondary sm" data-p="all">全期間</button><button type="button" class="btn secondary sm" data-p="today">今日</button><button type="button" class="btn secondary sm" data-p="7">過去7日</button><button type="button" class="btn secondary sm" data-p="30">過去30日</button><button type="button" class="btn secondary sm" data-p="month">今月</button><button type="button" class="btn secondary sm" data-p="year">今年</button><button type="button" class="btn secondary sm" data-p="custom">指定</button></div></div>
+  <div id="rfNav" class="rfnav" style="display:none"><button type="button" class="btn secondary sm" id="rfPrev" aria-label="前へ">◀</button><span id="rfNavLabel" aria-live="polite"></span><button type="button" class="btn secondary sm" id="rfNext" aria-label="次へ">▶</button></div>
+  <div id="rfCustom" style="display:none"><div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px"><div class="field" style="margin-bottom:6px"><label for="rfFrom">開始日</label><input type="date" id="rfFrom"></div><div class="field" style="margin-bottom:6px"><label for="rfTo">終了日</label><input type="date" id="rfTo"></div></div><div class="muted" id="rfSwapNote" style="display:none;font-size:.8rem;margin-bottom:8px">開始日が終了日より後なので、入れ替えて絞り込んでいます</div></div>
+  <div class="chips" id="rfChips" style="margin:0 0 10px"></div>
+  <div class="row rfbar" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span><button class="btn secondary sm admin-only" type="button" id="selSameDev" disabled>同じ端末の記録をすべて選択</button><button class="btn danger sm admin-only" type="button" id="bulkDelRec" disabled>選択した記録を一括削除</button></div>
+ <div class="table-wrap"><table id="recTable"><thead><tr><th class="admin-only"><input type="checkbox" id="selAllRec" aria-label="表示中の記録をすべて選択"></th><th>競技日</th><th>種目</th><th>競技者</th><th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th><th></th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty" id="empty">記録はまだありません。</div></div>
 </section>
 <div id="recMoreRow" class="row" style="display:none;justify-content:center;margin:12px 0"><button class="btn secondary" type="button" id="recMore">もっと見る</button></div>
 <div class="rfoot"><button class="btn secondary sm" id="exportBtn2">CSV書き出し</button><label class="btn secondary sm admin-only" for="importFile" style="cursor:pointer;margin:0">CSV読み込み</label><input type="file" id="importFile" accept=".csv,text/csv" style="display:none"></div>
@@ -343,6 +358,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
   <div class="row"><button class="btn" type="submit">ログイン</button><button class="btn secondary" type="button" id="loginCancel">キャンセル</button></div>
  </form></div>
 </div>
+<div id="toasts" role="status" aria-live="polite"></div>
 <div id="syncBar" role="status"><span id="syncMsg"></span><button type="button" id="syncRetry" style="display:none;margin-left:10px;padding:4px 12px;border-radius:99px;border:1px solid currentColor;background:transparent;color:inherit;font:inherit;cursor:pointer">今すぐ再送</button></div>
 <div class="modal" id="confirmModal" style="display:none" role="alertdialog" aria-modal="true" aria-labelledby="confirmMsg">
  <div class="modal-card" style="max-width:420px"><div id="confirmMsg" style="font-weight:800;font-size:1.05rem;margin-bottom:8px"></div><div id="confirmDetail" class="muted" style="white-space:pre-line;line-height:1.7"></div><div class="row" style="margin-top:16px"><button class="btn" type="button" id="confirmOk">タイムを確定</button><button class="btn secondary" type="button" id="confirmCancel">キャンセル</button></div></div>
@@ -508,7 +524,7 @@ async function doSync(){
  const{ops,cur}=diffOps(snap);
  if(!ops.length){unsentIds.clear();dirty=false;return}
  const pubOnly=ops.every(o=>PUB[o.t]);
- if(!pubOnly&&!isAdmin){clearTimeout(retryTimer);retryN=0;bar('');alert('管理者がログアウトしたため、保存されていない管理者の操作は取り消しました。');await revertAdmin(ops);return}   // 再送待ちの間にログアウトした
+ if(!pubOnly&&!isAdmin){clearTimeout(retryTimer);retryN=0;bar('');toast('管理者がログアウトしたため、保存されていない管理者の操作は取り消しました。','err');await revertAdmin(ops);return}   // 再送待ちの間にログアウトした
  outboxSet(ops);
  ops.forEach(o=>{if(o.t==='addRec')unsentIds.add(o.rec.id)});
  bar(pubOnly?'送信中…':'保存中…');
@@ -521,7 +537,7 @@ async function doSync(){
    // 保存されなかった操作がある：サーバーの状態に合わせて読み直す（未送信の控えも消してある）
    if(rej.length){
     const lab=x=>{const o=ops.find(p=>p.t===x.t&&((p.rec&&p.rec.id)===x.id||(p.scr&&p.scr.id)===x.id||p.id===x.id));const r=o&&o.rec,s=o&&o.scr;return (r?`${r.name}　${r.event}`:s?`${s.date}　${s.event}`:x.id||x.t)+'：'+(x.msg||'保存されませんでした')};
-    alert('次の操作は保存されませんでした。\n'+rej.map(lab).join('\n'));
+    toast('次の操作は保存されませんでした。\n'+rej.map(lab).join('\n'),'err');
    }
    await loadAll(true);repaintLists();
   }else{await loadAll();repaintLists()}
@@ -529,8 +545,8 @@ async function doSync(){
   const temp=!e.server||e.temp;
   if(temp&&!e.auth&&(pubOnly||isAdmin)){scheduleRetry(ops);return}   // 一時的なエラーは、管理者の操作も含めて再送する
   bar('');
-  if(e.auth){setAdmin(false);alert('管理者のログインが切れました。ログインし直して、もう一度操作してください。')}
-  else alert(temp?'保存できませんでした。もう一度操作してください。':'保存できませんでした：'+e.message);
+  if(e.auth){setAdmin(false);toast('管理者のログインが切れました。ログインし直して、もう一度操作してください。','err')}
+  else toast(temp?'保存できませんでした。もう一度操作してください。':'保存できませんでした：'+e.message,'err');
   await revertAdmin(ops);
  }
 }
@@ -702,14 +718,14 @@ const flowOn=()=>isFmc(eventValue())&&curFormat().n>=2;
 function flowReset(){flow.reached=1;flow.open=1}
 function flowConfirm(){
  const i=flow.open,n=curFormat().n;
- if(!getAttempt(i,true)){alert(`${i}回目の入力を確認してください。`+(fmcMo[i]?'例：25、DNF、DNS':'例：R U R\' U\'、DNF、DNS'));return}
+ if(!getAttempt(i,true)){toast(`${i}回目の入力を確認してください。`+(fmcMo[i]?'例：25、DNF、DNS':'例：R U R\' U\'、DNF、DNS'),'err');return}
  if(i<flow.reached)flow.open=flow.reached; // 編集していた回を確定したら、入力中だった回に戻る
  else{flow.reached=Math.min(n,i+1);flow.open=flow.reached}
  flowShow();
 }
 function flowEdit(i){
  const j=flow.open;if(i===j)return;
- if(rowFilled(j)&&!getAttempt(j,true)){alert(`${j}回目の入力を確認してください。`);return} // 入力中の回はそこで確定される
+ if(rowFilled(j)&&!getAttempt(j,true)){toast(`${j}回目の入力を確認してください。`,'err');return} // 入力中の回はそこで確定される
  flow.open=i;flowShow();
 }
 function flowOpenFor(i){flow.reached=Math.max(flow.reached,i);flow.open=i;flowShow()}
@@ -1523,7 +1539,7 @@ $('editModal').addEventListener('click',e=>{if(e.target===$('editModal'))closeEd
 $('editSave').addEventListener('click',()=>{
  const r=records.find(x=>x.id===editingId);if(!r)return closeEdit();
  const date=$('editDate').value,name=$('editName').value.trim(),event=$('editEvent').value==='__other__'?$('editEventOther').value.trim():$('editEvent').value;
- if(!date||!event||!name){alert('競技日・種目名・競技者の名前を入力してください。');return}
+ if(!date||!event||!name){toast('競技日・種目名・競技者の名前を入力してください。','err');return}
  const format={type:$('editFormatType').value,n:r.attempts.length},c=calc(r.attempts,event,format);
  Object.assign(r,{date,event,name,format,best:c.best,worst:c.worst,average:c.average});
  names=[name,...names.filter(x=>x!==name)];saveNames();
@@ -1725,66 +1741,90 @@ function badgeHtml(r,t){
 }
 function render(){computeBadges();if(curPg==='records')renderRecords()}
 const dp2=n=>String(n).padStart(2,'0');
-const DG={rfDate:{y:'',m:'',d:''},rfFrom:{y:'',m:'',d:''},rfTo:{y:'',m:'',d:''}};
 function setHtml(el,html){if(el.dataset.h!==html){el.innerHTML=html;el.dataset.h=html}}
-function fillDG(k){
- const g=DG[k],yrs=[...new Set(records.map(r=>r.date.slice(0,4)))];
- if(g.y&&!yrs.includes(g.y))yrs.push(g.y);
- yrs.sort().reverse();
- const inY=g.y?new Set(records.filter(r=>r.date.slice(0,4)===g.y).map(r=>r.date.slice(5,7))):null;
- let nd=31,inM=null;
- if(g.y&&g.m){nd=new Date(Number(g.y),Number(g.m),0).getDate();const pre=g.y+'-'+g.m;inM=new Set(records.filter(r=>r.date.slice(0,7)===pre).map(r=>r.date.slice(8,10)))}
- if(g.d&&Number(g.d)>nd)g.d='';
- let mo='<option value="">月</option>',da='<option value="">日</option>';
- for(let m=1;m<=12;m++){const v=dp2(m);mo+=`<option value="${v}"${g.m===v?' selected':''}${inY&&!inY.has(v)?' class="dim"':''}>${m}月</option>`}
- for(let d=1;d<=nd;d++){const v=dp2(d);da+=`<option value="${v}"${g.d===v?' selected':''}${inM&&!inM.has(v)?' class="dim"':''}>${d}日</option>`}
- setHtml($(k+'Y'),'<option value="">年</option>'+yrs.map(y=>`<option value="${y}"${g.y===y?' selected':''}>${y}年</option>`).join(''));
- setHtml($(k+'M'),mo);setHtml($(k+'D'),da);
- const v=g.y&&g.m&&g.d?`${g.y}-${g.m}-${g.d}`:'';if($(k).value!==v)$(k).value=v;
+// ---- 記録一覧の絞り込み（期間は日本時間の日付文字列 YYYY-MM-DD で計算する） ----
+const ymdU=d=>`${d.getUTCFullYear()}-${dp2(d.getUTCMonth()+1)}-${dp2(d.getUTCDate())}`;
+const parseYmd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d))};
+const addDays=(s,n)=>{const d=parseYmd(s);d.setUTCDate(d.getUTCDate()+n);return ymdU(d)};
+const WD=['日','月','火','水','木','金','土'];
+const FKEY='cutech-log-filter-v1',F_PERIODS=['all','today','7','30','month','year','custom'],F_SORTS=['new','old','best','avg'],YMD_RE=/^\d{4}-\d\d-\d\d$/;
+const F={ev:'',q:'',p:'all',n:0,from:'',to:'',sort:'new'};   // n: 「今日」「今月」「今年」の送り（0=現在、-1=ひとつ前）
+try{
+ const o=JSON.parse(localStorage.getItem(FKEY)||'null');
+ if(o&&typeof o==='object'){
+  if(typeof o.ev==='string')F.ev=o.ev;
+  if(typeof o.q==='string')F.q=o.q.slice(0,80);
+  if(F_PERIODS.includes(o.p))F.p=o.p;
+  if(Number.isInteger(o.n)&&o.n<=0)F.n=o.n;
+  if(YMD_RE.test(o.from))F.from=o.from;
+  if(YMD_RE.test(o.to))F.to=o.to;
+  if(F_SORTS.includes(o.sort))F.sort=o.sort;
+ }
+}catch{}
+function saveFilter(){try{localStorage.setItem(FKEY,J(F))}catch{}}
+function periodRange(){
+ const T=today();
+ if(F.p==='today'){const d=addDays(T,F.n),dt=parseYmd(d);return{from:d,to:d,label:`${d.slice(0,4)!==T.slice(0,4)?dt.getUTCFullYear()+'年':''}${dt.getUTCMonth()+1}月${dt.getUTCDate()}日(${WD[dt.getUTCDay()]})`}}
+ if(F.p==='month'){const t=parseYmd(T),f=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+F.n,1)),l=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+F.n+1,0));return{from:ymdU(f),to:ymdU(l),label:`${f.getUTCFullYear()}年${f.getUTCMonth()+1}月`}}
+ if(F.p==='year'){const y=Number(T.slice(0,4))+F.n;return{from:`${y}-01-01`,to:`${y}-12-31`,label:`${y}年`}}
+ if(F.p==='7')return{from:addDays(T,-6),to:T,label:'過去7日'};
+ if(F.p==='30')return{from:addDays(T,-29),to:T,label:'過去30日'};
+ if(F.p==='custom'){let from=F.from,to=F.to,swapped=false;if(from&&to&&from>to){[from,to]=[to,from];swapped=true}return{from,to,swapped,label:from||to?`${from||'…'}〜${to||'…'}`:'指定（日付未入力）'}}
+ return{from:'',to:'',label:''};
 }
-for(const k of ['rfDate','rfFrom','rfTo']){
- for(const[s,f]of [['Y','y'],['M','m'],['D','d']])$(k+s).addEventListener('change',e=>{DG[k][f]=e.target.value;renderRecords()});
- $(k).addEventListener('change',e=>{const v=e.target.value;if(v){const[y,m,d]=v.split('-');DG[k]={y,m,d}}else DG[k]={y:'',m:'',d:''};renderRecords()});
-}
-const dYmd=d=>`${d.getFullYear()}-${dp2(d.getMonth()+1)}-${dp2(d.getDate())}`;
-function setRange(a,b){const s=x=>{const[y,m,d]=x.split('-');return{y,m,d}};DG.rfFrom=s(a);DG.rfTo=s(b);renderRecords()}
-$('rfQuick').addEventListener('click',e=>{
- const q=e.target.dataset.q;if(!q)return;
- const t=new Date(),y=t.getFullYear(),m=t.getMonth(),back=n=>{const f=new Date(t);f.setDate(f.getDate()-n);return f};
- if(q==='today')setRange(dYmd(t),dYmd(t));
- else if(q==='7')setRange(dYmd(back(6)),dYmd(t));
- else if(q==='30')setRange(dYmd(back(29)),dYmd(t));
- else if(q==='month')setRange(dYmd(new Date(y,m,1)),dYmd(new Date(y,m+1,0)));
- else if(q==='last')setRange(dYmd(new Date(y,m-1,1)),dYmd(new Date(y,m,0)));
- else if(q==='year')setRange(`${y}-01-01`,`${y}-12-31`);
- else if(q==='lyear')setRange(`${y-1}-01-01`,`${y-1}-12-31`);
+for(const b of document.querySelectorAll('#rfPeriod [data-p]'))b.addEventListener('click',()=>{F.p=b.dataset.p;F.n=0;renderRecords();if(F.p==='custom')$('rfFrom').focus()});
+$('rfPrev').addEventListener('click',()=>{F.n-=1;renderRecords()});
+$('rfNext').addEventListener('click',()=>{if(F.n<0){F.n+=1;renderRecords()}});
+$('rfFrom').addEventListener('change',e=>{F.from=e.target.value;renderRecords()});
+$('rfTo').addEventListener('change',e=>{F.to=e.target.value;renderRecords()});
+$('rfSort').addEventListener('change',e=>{F.sort=e.target.value;renderRecords()});
+$('rfChips').addEventListener('click',e=>{
+ const k=e.target.dataset&&e.target.dataset.x;if(!k)return;
+ if(k==='ev')F.ev='';else if(k==='q'){F.q='';$('rfName').value=''}else if(k==='p'){F.p='all';F.n=0;F.from='';F.to=''}else if(k==='sort')F.sort='new';
+ renderRecords();
 });
+$('rfName').value=F.q;
 const REC_PAGE=50;let recLimit=REC_PAGE,recSig='';
 function renderRecords(){
- const sel=$('rfEvent'),prev=sel.value,present=cutechEvents().filter(e=>records.some(r=>r.event===e));
+ const sel=$('rfEvent'),present=cutechEvents().filter(e=>records.some(r=>r.event===e));
+ if(F.ev&&!present.includes(F.ev)){if(dataLoaded)F.ev='';else present.push(F.ev)}   // 読み込み前は保存された種目を残す
  sel.innerHTML='<option value="">すべての種目</option>'+present.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
- sel.value=present.includes(prev)?prev:'';
- const range=$('rfMode').value==='range';
- document.querySelectorAll('[data-rfm]').forEach(b=>{const on=b.dataset.rfm===$('rfMode').value;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
- $('rfDayBox').style.display=range?'none':'';$('rfFromBox').style.display=range?'':'none';$('rfToBox').style.display=range?'':'none';
- fillDG('rfDate');fillDG('rfFrom');fillDG('rfTo');
- $('rfQuick').style.display=range?'flex':'none';
- const ev=sel.value,q=$('rfName').value.trim().toLowerCase(),g=DG.rfDate;
- const bound=(x,hi)=>{if(!x.y)return'';const m=x.m||(hi?'12':'01');const d=x.d||(hi?dp2(new Date(Number(x.y),Number(m),0).getDate()):'01');return`${x.y}-${m}-${d}`};
- let from=bound(DG.rfFrom,false),to=bound(DG.rfTo,true);if(from&&to&&from>to)[from,to]=[to,from];
- const inDate=r=>range?((!from||r.date>=from)&&(!to||r.date<=to)):((!g.y||r.date.slice(0,4)===g.y)&&(!g.m||r.date.slice(5,7)===g.m)&&(!g.d||r.date.slice(8,10)===g.d));
+ sel.value=F.ev;
+ $('rfSort').value=F.sort;
+ const q=F.q.trim().toLowerCase(),pr=periodRange(),from=pr.from,to=pr.to;
+ document.querySelectorAll('#rfPeriod [data-p]').forEach(b=>{const on=b.dataset.p===F.p;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+ const nav=F.p==='today'||F.p==='month'||F.p==='year';
+ $('rfNav').style.display=nav?'flex':'none';$('rfNavLabel').textContent=nav?pr.label:'';$('rfNext').disabled=F.n>=0;
+ $('rfCustom').style.display=F.p==='custom'?'':'none';
+ if($('rfFrom').value!==F.from)$('rfFrom').value=F.from;if($('rfTo').value!==F.to)$('rfTo').value=F.to;
+ $('rfSwapNote').style.display=F.p==='custom'&&pr.swapped?'':'none';
+ {const ds=records.map(r=>r.date).filter(Boolean).sort(),mn=ds[0]||'',mx=ds[ds.length-1]||'';
+  for(const id of ['rfFrom','rfTo']){if(mn)$(id).min=mn;else $(id).removeAttribute('min');if(mx)$(id).max=mx;else $(id).removeAttribute('max')}}
+ const chips=[];
+ if(F.ev)chips.push(['ev',`種目：${F.ev}`,'種目']);
+ if(q)chips.push(['q',`競技者：${F.q.trim()}`,'競技者名']);
+ if(F.p!=='all')chips.push(['p',`期間：${pr.label}`,'期間']);
+ if(F.sort!=='new')chips.push(['sort',`並び順：${$('rfSort').selectedOptions[0].textContent}`,'並び順']);
+ setHtml($('rfChips'),chips.map(([k,t,n])=>`<span class="chip active"><span style="padding:7px 4px 7px 14px;font-size:.9rem">${esc(t)}</span><button type="button" class="x" data-x="${k}" aria-label="${n}の絞り込みを外す">×</button></span>`).join(''));
+ $('rfChips').style.display=chips.length?'':'none';
  const ord=new Map(records.map((r,i)=>[r.id,i]));
- const list=records.filter(r=>inDate(r)&&(!ev||r.event===ev)&&(!q||r.name.toLowerCase().includes(q)))
-  .sort((a,b)=>b.date.localeCompare(a.date)||(a.createdAt&&b.createdAt?String(b.createdAt).localeCompare(String(a.createdAt)):0)||ord.get(a.id)-ord.get(b.id));
+ const cmpNew=(a,b)=>b.date.localeCompare(a.date)||(a.createdAt&&b.createdAt?String(b.createdAt).localeCompare(String(a.createdAt)):0)||ord.get(a.id)-ord.get(b.id);
+ const list=records.filter(r=>(!from||r.date>=from)&&(!to||r.date<=to)&&(!F.ev||r.event===F.ev)&&(!q||r.name.toLowerCase().includes(q)));
+ if(F.sort==='old')list.sort((a,b)=>cmpNew(b,a));
+ else if(F.sort==='best'||F.sort==='avg'){
+  const keys=new Map(list.map(r=>[r.id,F.sort==='best'?(bestAttempt(r)||{key:[Infinity]}).key:sortKey(r,true)]));   // DNF・DNS・空欄は Infinity で最後
+  list.sort((a,b)=>cmpKey(keys.get(a.id),keys.get(b.id))||cmpNew(a,b));
+ }else list.sort(cmpNew);
+ saveFilter();
  $('empty').textContent=!dataLoaded?'記録を読み込み中…':records.length?'条件に合う記録がありません。':'記録はまだありません。';
  $('empty').style.display=list.length?'none':'block';
- const sig=J([range,from,to,g.y,g.m,g.d,ev,q]);if(sig!==recSig){recSig=sig;recLimit=REC_PAGE;selWide=false}
+ const sig=J([from,to,F.ev,q,F.sort]);if(sig!==recSig){recSig=sig;recLimit=REC_PAGE;selWide=false}
  const shown=list.slice(0,recLimit);
  $('rfCount').textContent=dataLoaded?`${list.length}件`+(list.length!==records.length?`（全${records.length}件）`:'')+(list.length>shown.length?`　${shown.length}件を表示中`:''):'';
  $('recMoreRow').style.display=list.length>shown.length?'flex':'none';
  $('recMore').textContent=`もっと見る（残り${list.length-shown.length}件）`;
  {const vis=new Set(shown.map(r=>r.id));if(!selWide)for(const id of [...selRec])if(!vis.has(id))selRec.delete(id);lastRecList=shown}
- $('recordRows').innerHTML=shown.map(r=>`<tr><td class="admin-only"><input type="checkbox" data-rsel="${esc(r.id)}"${selRec.has(r.id)?' checked':''} aria-label="選択"></td><td>${esc(r.date)}</td><td>${evShort(r.event)}</td><td>${esc(r.name)}${unsentBadge(r)}</td><td>${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td>${a?`<button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button>`:'—'}</td>`}).join('')}<td><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td>${esc(r.worst)}</td><td><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td style="white-space:nowrap"><button class="btn secondary admin-only" data-edit="${esc(r.id)}" style="padding:6px 9px;margin-right:6px">編集</button><button class="btn secondary admin-only" data-del="${esc(r.id)}" style="padding:6px 9px">削除</button></td></tr>`).join('');
+ $('recordRows').innerHTML=shown.map(r=>`<tr><td class="admin-only c-sel"><input type="checkbox" data-rsel="${esc(r.id)}"${selRec.has(r.id)?' checked':''} aria-label="選択"></td><td data-label="競技日">${esc(r.date)}</td><td data-label="種目">${evShort(r.event)}</td><td data-label="競技者">${esc(r.name)}${unsentBadge(r)}</td><td data-label="形式">${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td data-label="${k+1}回目" class="c-att${a?'':' na'}">${a?`<button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button>`:'—'}</td>`}).join('')}<td class="c-best" data-label="ベスト"><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td class="c-worst" data-label="ワースト">${esc(r.worst)}</td><td class="c-avg" data-label="平均"><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td class="c-act" style="white-space:nowrap"><button class="btn secondary admin-only" data-edit="${esc(r.id)}" style="padding:6px 9px;margin-right:6px">編集</button><button class="btn secondary admin-only" data-del="${esc(r.id)}" style="padding:6px 9px">削除</button></td><td class="brk brk1" aria-hidden="true"></td><td class="brk brk2" aria-hidden="true"></td><td class="brk brk3" aria-hidden="true"></td></tr>`).join('');
  updateRecBulk();
 }
 function clearTimes(){for(let i=1;i<=5;i++){clearRow(i)}flowReset();applyEventLayout();updatePA();$('result').classList.remove('show');$('t1').focus()}
@@ -1801,14 +1841,21 @@ function settleConfirm(v){if(!confirmResolve)return;$('confirmModal').style.disp
 $('confirmOk').addEventListener('click',()=>settleConfirm(true));
 $('confirmCancel').addEventListener('click',()=>settleConfirm(false));
 function showAlert(msg,detail){return showConfirm(msg,detail,'OK',null)}
-window.alert=m=>{const s=String(m),i=s.indexOf('\n');showAlert(i<0?s:s.slice(0,i),i<0?'':s.slice(i+1))};
+function toast(msg,kind='info'){
+ const t=document.createElement('div');t.className='toast '+kind;t.textContent=String(msg);
+ const close=()=>{if(t.parentNode)t.remove()};
+ if(kind==='err'){t.title='タップで閉じる';t.addEventListener('click',close)}
+ $('toasts').appendChild(t);
+ setTimeout(close,kind==='err'?9000:3500);
+}
+function askConfirm(msg,o={}){return showConfirm(msg,o.detail||'',o.ok||'OK',o.cancel===undefined?'キャンセル':o.cancel,!!o.danger)}
 $('attemptForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if(pendingSubmit)return;
  const date=$('eventDate').value,event=eventValue(),name=$('competitor').value.trim();
- if(!date||!event||!name){alert('競技日・種目名・競技者の名前を入力してください。');return}
+ if(!date||!event||!name){toast('競技日・種目名・競技者の名前を入力してください。','err');return}
  const format=curFormat(),n=format.n,fmc=isFmc(event),attempts=[];
- for(let i=1;i<=n;i++){const a=getAttempt(i,fmc);if(!a){alert(`${i}回目の入力を確認してください。`+(isMbld(event)?'例：1:00:00 18/20、DNF、DNS（挑戦2個以上、制限時間以内）':fmc?(fmcMo[i]?'例：25、DNF、DNS':'例：R U R\' U\'、DNF、DNS'):'例：1234、12.34、1:23.45、DNF、DNS'));if(flowOn())flowOpenFor(i);else $('t'+i).focus();return}attempts.push(a)}
+ for(let i=1;i<=n;i++){const a=getAttempt(i,fmc);if(!a){toast(`${i}回目の入力を確認してください。`+(isMbld(event)?'例：1:00:00 18/20、DNF、DNS（挑戦2個以上、制限時間以内）':fmc?(fmcMo[i]?'例：25、DNF、DNS':'例：R U R\' U\'、DNF、DNS'):'例：1234、12.34、1:23.45、DNF、DNS'),'err');if(flowOn())flowOpenFor(i);else $('t'+i).focus();return}attempts.push(a)}
  pendingSubmit=true;
  const ok=await showConfirm('タイムを確定しますか？',`${name}　${event}（${fLabel(format)}）\n`+attempts.map((a,i)=>`${i+1}回目：${attemptText(a,event,true)}${(a.sol&&a.kind==='DNF'&&fmcFail(i+1,a.time,a.sol)==='80')?'（80手超）':''}`).join('\n'),'タイムを確定','キャンセル');
  pendingSubmit=false;
@@ -1829,9 +1876,8 @@ $('attemptForm').addEventListener('submit',async e=>{
  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
 });
 $('resetBtn').addEventListener('click',clearTimes);
-document.querySelectorAll('[data-rfm]').forEach(b=>b.addEventListener('click',()=>{$('rfMode').value=b.dataset.rfm;renderRecords()}));
-$('rfEvent').addEventListener('change',renderRecords);$('rfName').addEventListener('input',renderRecords);
-$('rfClear').addEventListener('click',()=>{$('rfMode').value='day';for(const k of ['rfDate','rfFrom','rfTo'])DG[k]={y:'',m:'',d:''};$('rfEvent').value='';$('rfName').value='';renderRecords()});
+$('rfEvent').addEventListener('change',e=>{F.ev=e.target.value;renderRecords()});$('rfName').addEventListener('input',e=>{F.q=e.target.value;renderRecords()});
+$('rfClear').addEventListener('click',()=>{Object.assign(F,{ev:'',q:'',p:'all',n:0,from:'',to:'',sort:'new'});$('rfName').value='';renderRecords()});
 $('recordRows').addEventListener('click',async e=>{const ab=e.target.closest('.att-btn');if(ab){const r=records.find(x=>x.id===ab.dataset.rid);if(r)openScrModal(r,Number(ab.dataset.ai));return}if(e.target.dataset.edit){const r=records.find(x=>x.id===e.target.dataset.edit);if(r)openEdit(r);return}const id=e.target.dataset.del;if(!id)return;
  const rec=records.find(r=>r.id===id);if(!rec||pendingSubmit)return;
  pendingSubmit=true;
@@ -1882,7 +1928,7 @@ $('rnApply').addEventListener('click',async()=>{
  const nw=$('rnNew').value.trim(),olds=[...rnSel].filter(n=>n!==nw);
  if(!nw||!rnSel.size)return;
  const targets=records.filter(r=>olds.includes(r.name)),candHit=olds.some(n=>names.includes(n));
- if(!targets.length&&!candHit){alert('変更する名前がありません。');return}
+ if(!targets.length&&!candHit){toast('変更する名前がありません。','info');return}
  const merged=records.some(r=>r.name===nw);
  const ok=await showConfirm(`${targets.length}件の記録の名前を変更しますか？`,`${olds.join('、')}\n→ ${nw}${merged?`\n「${nw}」の既存の記録と同じ名前になります（まとめられます）。`:''}`,'変更する','キャンセル');
  if(!ok)return;
@@ -1890,7 +1936,7 @@ $('rnApply').addEventListener('click',async()=>{
  names=[nw,...names.filter(x=>x!==nw&&!olds.includes(x))];
  rnSel.clear();$('rnNew').value='';
  save();saveNames();render();renderNames();renderRename();
- alert(`${targets.length}件の記録の名前を「${nw}」に変更しました`);
+ toast(`${targets.length}件の記録の名前を「${nw}」に変更しました`,'ok');
 });
 // ---- personal page ----
 function exportCsv(){
@@ -1973,9 +2019,9 @@ const recKey=r=>[r.date,r.event,r.name.trim(),fLabel(recordFormat(r)),r.attempts
 $('importFile').addEventListener('change',async()=>{
  const file=$('importFile').files[0];$('importFile').value='';
  if(!file||pendingSubmit)return;
- let text;try{text=await file.text()}catch{alert('ファイルを読み込めませんでした。');return}
+ let text;try{text=await file.text()}catch{toast('ファイルを読み込めませんでした。','err');return}
  const res=parseImport(text);
- if(res.error){alert(res.error);return}
+ if(res.error){toast(res.error,'err');return}
  pendingSubmit=true;
  const mode=await askImport(`${res.records.length}件の記録を読み込みます。\n現在の記録：${records.length}件`);
  let ok=!!mode;
@@ -1986,13 +2032,13 @@ $('importFile').addEventListener('change',async()=>{
  if(mode==='replace'){records=res.records;msg=`${res.records.length}件の記録に書き換えました。`}
  else{
   const have=new Set(records.map(recKey)),fresh=res.records.filter(r=>{const k=recKey(r);if(have.has(k))return false;have.add(k);return true});
-  if(!fresh.length){alert('追加できる新しい記録はありませんでした（すべて登録済みです）。');return}
+  if(!fresh.length){toast('追加できる新しい記録はありませんでした（すべて登録済みです）。','info');return}
   records=[...fresh,...records];
   msg=`${fresh.length}件の記録を追加しました。`+(fresh.length<res.records.length?`\n（登録済みの${res.records.length-fresh.length}件はスキップしました）`:'');
  }
  for(const r of res.records){if(!names.includes(r.name))names.push(r.name)}
  saveNames();save();render();renderNames();
- alert(msg);
+ toast(msg,'ok');
 });
 // ---- Scramble page ----
 let scrambles=[];
@@ -2067,10 +2113,10 @@ $('scSaved').addEventListener('click',async e=>{const b=e.target.closest('button
  if(ok){scrambles=scrambles.filter(x=>x.id!==s.id);saveScrambles();renderSaved()}});
 $('scSave').addEventListener('click',async()=>{
  const date=$('sDate').value,event=sEventValue(),format=sFormat();
- if(!date||!event){alert('競技日と種目名を入力してください。');return}
+ if(!date||!event){toast('競技日と種目名を入力してください。','err');return}
  const list=[];for(let i=1;i<=format.n;i++)list.push(normScr($('sc'+i).value));
  const miss=list.findIndex(x=>!x);
- if(miss>=0){alert(`${miss+1}個目のスクランブルを入力してください。`);$('sc'+(miss+1)).focus();return}
+ if(miss>=0){toast(`${miss+1}個目のスクランブルを入力してください。`,'err');$('sc'+(miss+1)).focus();return}
  const info=`${date}　${event}（${fLabel(format)}）`;
  const editing=editingScrId?scrambles.find(x=>x.id===editingScrId):null;
  if(editingScrId&&!editing)setScrEdit(null);
@@ -2081,7 +2127,7 @@ $('scSave').addEventListener('click',async()=>{
  for(let i=1;i<=5;i++)$('sc'+i).value='';
  $('fsDate').value=date;$('fsEvent').value='';renderSaved();
  $('scStatus').textContent='';
- alert(editing?'スクランブルが更新されました':'スクランブルが保存されました');setScrEdit(null);
+ toast(editing?'スクランブルが更新されました':'スクランブルが保存されました','ok');setScrEdit(null);
 });
 function setScrEdit(id){
  editingScrId=id;const e=!!id;
@@ -2165,17 +2211,17 @@ $('exClear').addEventListener('click',exClear);
 $('exModeBack').addEventListener('click',()=>{exClear();setExUiMode(false)});$('exClearTop').addEventListener('click',exClear);
 async function exSave(){
  const date=$('sDate').value,event=sEventValue(),format=sFormat();
- if(!date||!event){alert('競技日と種目名を入力してください。');return}
+ if(!date||!event){toast('競技日と種目名を入力してください。','err');return}
  const e1=normScr($('ex1').value),e2=normScr($('ex2').value);
- if(!e1&&!e2){alert('Ex1またはEx2のスクランブルを入力してください。');return}
- if(!e1&&e2){alert('Ex1から入力してください。');$('ex1').focus();return}
+ if(!e1&&!e2){toast('Ex1またはEx2のスクランブルを入力してください。','err');return}
+ if(!e1&&e2){toast('Ex1から入力してください。','err');$('ex1').focus();return}
  const info=`${date}　${event}（${fLabel(format)}）`,en=findScrEntry();
  if(!en){await showAlert('先に通常のスクランブルを保存してください',info+'\nこの競技情報の通常のスクランブルが、まだ保存されていません。');return}
  const had=en.ex&&en.ex.length;
  if(!await showConfirm('Exスクランブルを保存しますか？',info+(had?'\n保存済みのExスクランブルは上書きされます。':''),'確定','キャンセル'))return;
  en.ex=[e1,e2].filter(Boolean);en.updatedAt=new Date().toISOString();
  saveScrambles();renderSaved();
- alert('Exスクランブルが保存されました');
+ toast('Exスクランブルが保存されました','ok');
 }
 $('exSave').addEventListener('click',exSave);$('exSaveTop').addEventListener('click',exSave);
 $('scSaveTop').addEventListener('click',()=>$('scSave').click());
@@ -2686,9 +2732,9 @@ let autoBusy=false;
 async function autoScr(){
  if(autoBusy)return;
  const date=$('sDate').value,event=sEventValue(),format=sFormat();
- if(!date||!event){alert('競技日と種目名を入力してください。');return}
- if(!WCA_ID[evBase(event)]){alert('この種目は自動生成に対応していません。手入力してください。');return}
- if(isMbld(event)&&!mbldCubes()){alert('Multi-Blindの本数は2〜200の整数で入力してください。');$('scMbN').focus();return}
+ if(!date||!event){toast('競技日と種目名を入力してください。','err');return}
+ if(!WCA_ID[evBase(event)]){toast('この種目は自動生成に対応していません。手入力してください。','err');return}
+ if(isMbld(event)&&!mbldCubes()){toast('Multi-Blindの本数は2〜200の整数で入力してください。','err');$('scMbN').focus();return}
  const info=`${date}　${event}（${fLabel(format)}）`;
  if(scrambles.some(x=>x.date===date&&x.event===event&&fLabel(x.format)===fLabel(format))){await showAlert('同じ競技情報のスクランブルが既に保存されています',info+'\n保存済みのスクランブルを削除してから、生成し直してください。');return}
  autoBusy=true;$('scModeAuto').disabled=$('scModeManual').disabled=true;
@@ -2700,11 +2746,11 @@ async function autoScr(){
   saveScrambles();renderSaved();
   $('fsDate').value=date;$('fsEvent').value='';renderSaved();
   $('scAutoStatus').textContent='';
-  alert('スクランブルが保存されました');
+  toast('スクランブルが保存されました','ok');
  }catch(e){
   console.error(e);
   $('scAutoStatus').textContent='';
-  alert('スクランブルを生成できませんでした。通信状況を確認するか、手入力してください。\n'+(e&&e.message||e));
+  toast('スクランブルを生成できませんでした。通信状況を確認するか、手入力してください。\n'+(e&&e.message||e),'err');
  }finally{autoBusy=false;$('scModeAuto').disabled=$('scModeManual').disabled=false}
 }
 $('scModeAuto').addEventListener('click',autoScr);
@@ -2714,9 +2760,9 @@ let exBusy=false;
 async function autoEx(){
  if(exBusy)return;
  const date=$('sDate').value,event=sEventValue(),format=sFormat();
- if(!date||!event){alert('競技日と種目名を入力してください。');return}
- if(!WCA_ID[evBase(event)]){alert('この種目は自動生成に対応していません。手入力してください。');return}
- if(isMbld(event)&&!exMbldCubes()){alert('Multi-Blindの本数は2〜200の整数で入力してください。');$('exMbN').focus();return}
+ if(!date||!event){toast('競技日と種目名を入力してください。','err');return}
+ if(!WCA_ID[evBase(event)]){toast('この種目は自動生成に対応していません。手入力してください。','err');return}
+ if(isMbld(event)&&!exMbldCubes()){toast('Multi-Blindの本数は2〜200の整数で入力してください。','err');$('exMbN').focus();return}
  const info=`${date}　${event}（${fLabel(format)}）`,en=findScrEntry();
  if(!en){await showAlert('先に通常のスクランブルを保存してください',info+'\nこの競技情報の通常のスクランブルが、まだ保存されていません。');return}
  if(en.ex&&en.ex.length&&!await showConfirm('Exスクランブルを上書きしますか？',info+'\n保存済みのExスクランブルは上書きされます。','上書きする','キャンセル'))return;
@@ -2729,11 +2775,11 @@ async function autoEx(){
   cur.ex=list;cur.updatedAt=new Date().toISOString();
   saveScrambles();renderSaved();
   $('exAutoStatus').textContent='';
-  alert('Exスクランブルが保存されました');
+  toast('Exスクランブルが保存されました','ok');
  }catch(e){
   console.error(e);
   $('exAutoStatus').textContent='';
-  alert('スクランブルを生成できませんでした。通信状況を確認するか、手入力してください。\n'+(e&&e.message||e));
+  toast('スクランブルを生成できませんでした。通信状況を確認するか、手入力してください。\n'+(e&&e.message||e),'err');
  }finally{exBusy=false;$('exModeAuto').disabled=$('exModeManual').disabled=false}
 }
 $('exModeAuto').addEventListener('click',autoEx);
@@ -2767,7 +2813,7 @@ async function pubGenScr(){
  if(pubBusy)return;
  let g=genWanted();if(!g)return;
  const mb=isMbld(g.ev)?Math.floor(Number($('scrGenMbN').value)):0;
- if(isMbld(g.ev)&&!(mb>=2&&mb<=200)){alert('Multi-Blindの本数は2〜200の整数で入力してください。');$('scrGenMbN').focus();return}
+ if(isMbld(g.ev)&&!(mb>=2&&mb<=200)){toast('Multi-Blindの本数は2〜200の整数で入力してください。','err');$('scrGenMbN').focus();return}
  pubBusy=true;$('scrGenBtn').disabled=true;$('scrGenStatus').textContent='スクランブルを生成中…';
  try{
   try{await loadAll()}catch{}                       // 他の人が先に生成していないか、最新の状態を確認する
@@ -2781,7 +2827,7 @@ async function pubGenScr(){
   saveScrambles();renderSaved();
  }catch(e){
   console.error(e);
-  alert('スクランブルを生成できませんでした。通信状況を確認してください。\n'+(e&&e.message||e));
+  toast('スクランブルを生成できませんでした。通信状況を確認してください。\n'+(e&&e.message||e),'err');
  }finally{pubBusy=false;$('scrGenBtn').disabled=false;$('scrGenStatus').textContent='';updateScr()}
 }
 $('scrGenBtn').addEventListener('click',pubGenScr);
