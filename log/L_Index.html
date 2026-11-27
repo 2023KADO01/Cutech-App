@@ -108,6 +108,8 @@ button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active
 .scrmini{margin-top:12px;padding:8px 14px;text-align:center;font-weight:700;font-size:.85rem;color:var(--accent);cursor:pointer;border:1px dashed var(--line);border-radius:12px;background:var(--field)}
 #scrPanelImg{cursor:pointer;transition:transform .12s ease,filter .12s ease;-webkit-user-select:none;user-select:none}
 #scrPanelImg.pressing{transform:scale(.94);filter:var(--press);transition-duration:0s}
+#mImg{transition:transform .12s ease,filter .12s ease}
+#mImg.pressing{transform:scale(.94);filter:var(--press);transition-duration:0s}
 .scrmini:active{filter:var(--press);transform:scale(.98);transition-duration:0s}
 #fmcKb{display:none;background:var(--field);border:1px solid var(--line);border-radius:14px;padding:10px;gap:8px;grid-template-columns:repeat(5,minmax(0,1fr))}
 #fmcKb button{border:1px solid var(--line);background-color:var(--panel);color:var(--text);border-radius:12px;padding:17px 0;font:inherit;font-weight:800;font-size:1.3rem;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center}
@@ -1576,6 +1578,11 @@ $('scrModal').addEventListener('click',e=>{
  if(e.target.closest('#mImgWrap')){mScrHidden=true;$('mImgWrap').style.display='none';$('mMini').style.display='';return}
  if(e.target.closest('#mMini')){mScrHidden=false;$('mImgWrap').style.display='';$('mMini').style.display='none'}
 });
+// モーダルの画像も、押している間ちょっと縮める（#mImg は開くたびに作り直すので委譲で扱う）
+{const mPress=on=>{const i=$('mImg');if(i)i.classList.toggle('pressing',on)};
+$('scrModal').addEventListener('pointerdown',e=>{if(e.target.closest('#mImgWrap')&&!e.target.closest('.sq1-ctl,button,a,input,select,textarea,label'))mPress(true)});
+for(const ev of ['pointerup','pointercancel'])$('scrModal').addEventListener(ev,()=>mPress(false));
+$('scrModal').addEventListener('pointerout',e=>{if(!e.relatedTarget||!e.relatedTarget.closest('#mImgWrap'))mPress(false)})}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeScrModal();closeEdit();settleConfirm(false);settleImport(null)}});
 $('eventDate').addEventListener('change',updateScr);$('eventDate').addEventListener('input',updateScr);
 $('attemptGrid').addEventListener('focusin',()=>setTimeout(()=>guarded('scr',updateScr),0));$('attemptGrid').addEventListener('focusout',()=>setTimeout(()=>guarded('scr',updateScr),0));
