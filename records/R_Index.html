@@ -97,6 +97,50 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 #bdgTip .tl{display:grid;grid-template-columns:repeat(2,auto);gap:2px 16px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(128,128,128,.4);font-size:.72rem}#bdgTip .tl em{font-style:normal;opacity:.7;white-space:nowrap}#bdgTip .tl em.ok{opacity:1;font-weight:800}
 #bdgTip b{display:block;font-weight:800}#bdgTip span{display:block;font-size:.76rem;opacity:.85;margin-top:1px}
 @media(max-width:650px){#plBadges{margin-left:0;align-items:flex-start;width:100%}.brow{justify-content:flex-start}.bimg img{width:42px;height:42px}}
+:root{--ok:#1f9d55;--sh-l:.14;--sh-r:.30;--bronze-s1:#e6aa7c;--bronze-s2:#cf8248;--bronze-s3:#b3652d;--bronze-s4:#8f4a1c;--bronze-s5:#6a3412;--bronze-edge:#7a3f14;--bronze-text:#8a4a1a;--silver-s1:#f4f8fc;--silver-s2:#d6e2ef;--silver-s3:#b4c7dc;--silver-s4:#8ea6c2;--silver-s5:#6a84a3;--silver-edge:#5a7595;--silver-text:#456a90;--gold-s1:#f6d978;--gold-s2:#e8bb3c;--gold-s3:#d19a14;--gold-s4:#b17b0b;--gold-s5:#7a5604;--gold-edge:#8a6208;--gold-text:#8a6208;--platinum-s1:#fffaea;--platinum-s2:#f6ebc0;--platinum-s3:#e6d595;--platinum-s4:#c9b06a;--platinum-s5:#9c8444;--platinum-edge:#9c8444;--platinum-text:#7d6420;--opal-s1:#f9f1f7;--opal-s2:#f2b0cf;--opal-s3:#93d3ea;--opal-s4:#bfe39a;--opal-s5:#b9a3ea;--opal-edge:#9a88bb;--opal-text:#7a52b3;}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--ok:#2fae6a;--bronze-s1:#f6cba6;--bronze-s2:#e19c66;--bronze-s3:#c77744;--bronze-s4:#9b522a;--bronze-s5:#6b3517;--bronze-edge:#f0b48a;--bronze-text:#eab18a;--silver-s1:#ffffff;--silver-s2:#eef4fb;--silver-s3:#d2e0f0;--silver-s4:#aebfd6;--silver-s5:#8197b3;--silver-edge:#a9bcd4;--silver-text:#d4e4f7;--gold-s1:#fdeda8;--gold-s2:#efc95f;--gold-s3:#e2b53d;--gold-s4:#c0911c;--gold-s5:#a97d12;--gold-edge:#a97d12;--gold-text:#f0cd62;--platinum-s1:#fffdf3;--platinum-s2:#f8eec8;--platinum-s3:#e9d595;--platinum-s4:#cdb26a;--platinum-s5:#9c8445;--platinum-edge:#c4ab62;--platinum-text:#f6ecc6;--opal-s1:#fff7fb;--opal-s2:#f9bfdc;--opal-s3:#a6e0f3;--opal-s4:#cdeba8;--opal-s5:#c8b3f2;--opal-edge:#aaa0cc;--opal-text:#dccbff;}}
+:root[data-theme="dark"]{--ok:#2fae6a;--bronze-s1:#f6cba6;--bronze-s2:#e19c66;--bronze-s3:#c77744;--bronze-s4:#9b522a;--bronze-s5:#6b3517;--bronze-edge:#f0b48a;--bronze-text:#eab18a;--silver-s1:#ffffff;--silver-s2:#eef4fb;--silver-s3:#d2e0f0;--silver-s4:#aebfd6;--silver-s5:#8197b3;--silver-edge:#a9bcd4;--silver-text:#d4e4f7;--gold-s1:#fdeda8;--gold-s2:#efc95f;--gold-s3:#e2b53d;--gold-s4:#c0911c;--gold-s5:#a97d12;--gold-edge:#a97d12;--gold-text:#f0cd62;--platinum-s1:#fffdf3;--platinum-s2:#f8eec8;--platinum-s3:#e9d595;--platinum-s4:#cdb26a;--platinum-s5:#9c8445;--platinum-edge:#c4ab62;--platinum-text:#f6ecc6;--opal-s1:#fff7fb;--opal-s2:#f9bfdc;--opal-s3:#a6e0f3;--opal-s4:#cdeba8;--opal-s5:#c8b3f2;--opal-edge:#aaa0cc;--opal-text:#dccbff;}
+.cube{display:block;overflow:visible}
+.cube .grv{stroke:rgba(0,0,0,.34);stroke-width:.9;fill:none}
+.cube .grl{stroke:rgba(255,255,255,.4);stroke-width:.5;fill:none}
+.cube .edge{fill:none;stroke-width:1.5;stroke-linejoin:round}
+.cube .shine{animation:shine 5.5s ease-in-out infinite}
+@keyframes shine{0%,15%{transform:translateX(-70px) skewX(-22deg)}70%,100%{transform:translateX(150px) skewX(-22deg)}}
+@keyframes hue{from{filter:hue-rotate(-28deg) saturate(1.1)}to{filter:hue-rotate(32deg) saturate(1.2)}}
+.opal-anim svg.cube{animation:hue 7s ease-in-out infinite alternate}
+@media(prefers-reduced-motion:reduce){.cube .shine{animation:none;display:none}.opal-anim svg.cube{animation:none}}
+#plName{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;line-height:1.3}
+.tchip{display:inline-flex;align-items:center;gap:7px;padding:3px 11px 3px 5px;border:1.5px solid var(--tedge);border-radius:999px;background:var(--field);cursor:pointer;font-size:.88rem;line-height:1.2;white-space:nowrap}
+.tchip .cube{width:26px;height:26px;flex:none}
+.tchip .tn{font-weight:800;color:var(--ttext)}
+.tchip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mt{display:flex;align-items:center;gap:12px;min-width:0}
+.mt .cube{width:44px;height:44px;flex:none}
+.mt b{display:block;font-size:1.1rem;line-height:1.3;color:var(--ttext)}
+.mt span{display:block;font-size:.85rem;color:var(--muted);font-weight:700}
+.mh{font-size:.78rem;font-weight:800;color:var(--muted);margin:16px 0 6px;letter-spacing:.04em}
+.gl{display:flex;flex-direction:column;gap:6px}
+.gr{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--field)}
+.gr img{width:44px;height:44px;flex:none;display:block}
+.gr .tx{flex:1;min-width:0;line-height:1.35}
+.gr .tx b{display:block;font-size:.92rem}
+.gr .tx span{display:block;font-size:.8rem;color:var(--muted)}
+.gr .ck{width:26px;height:26px;flex:none;border-radius:50%;border:2px solid var(--field-line);display:flex;align-items:center;justify-content:center}
+.gr.ok{border-color:var(--ok)}
+.gr.ok .ck{background:var(--ok);border-color:var(--ok);color:#fff}
+.gr.ok .ck svg{width:15px;height:15px}
+.gr:not(.ok) img{filter:grayscale(1);opacity:.4}
+.gr:not(.ok) .tx b{color:var(--muted)}
+.gr .ck svg{display:none}.gr.ok .ck svg{display:block}
+.tt{display:flex;flex-direction:column;font-size:.88rem}
+.tt .r{display:grid;grid-template-columns:auto 1fr auto;align-items:center;border-radius:9px;padding:0 12px 0 10px}
+.tt .r>*{padding:5px 8px;opacity:.5}
+.tt .r.done>*{opacity:.85}
+.tt .r.cur{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.tt .r.cur>*{opacity:1;font-weight:800}
+.tt .r>:last-child{padding-right:0}
+.tt .cube{width:24px;height:24px}
+.tt em{font-style:normal;white-space:nowrap;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -169,6 +213,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 <div class="modal" id="scrModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="scrModalTitle">
  <div class="modal-card"><div class="modal-head"><strong id="scrModalTitle"></strong><button class="btn secondary" type="button" id="scrModalClose" style="padding:7px 12px;flex:none">閉じる</button></div><div class="scrtext" id="scrModalBody"></div></div>
 </div>
+<div class="modal" id="titleModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="titleModalTitle"><div class="modal-card" id="titleModalCard"></div></div>
 <script>
 const $=id=>document.getElementById(id);
 const BUILTIN_EV=["3x3x3 Cube", "2x2x2 Cube", "4x4x4 Cube", "5x5x5 Cube", "6x6x6 Cube", "7x7x7 Cube", "3x3x3 Blindfolded", "3x3x3 Fewest Moves", "3x3x3 One-Handed", "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1", "4x4x4 Blindfolded", "5x5x5 Blindfolded", "3x3x3 Multi-Blind", "Face Turning Octahedron"];
@@ -942,7 +987,7 @@ $('scrModal').addEventListener('click',e=>{
 $('scrModal').addEventListener('pointerdown',e=>{if(e.target.closest('#mImgWrap')&&!e.target.closest('.sq1-ctl,button,a,input,select,textarea,label'))mPress(true)});
 for(const ev of ['pointerup','pointercancel'])$('scrModal').addEventListener(ev,()=>mPress(false));
 $('scrModal').addEventListener('pointerout',e=>{if(!e.relatedTarget||!e.relatedTarget.closest('#mImgWrap'))mPress(false)})}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeScrModal();closeDetail()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeScrModal();closeDetail();closeTitleModal()}});
 $('dayDate').addEventListener('change',renderDay);
 for(const id of ['dayPrev','dayNext'])$(id).addEventListener('click',()=>{const t=$(id).dataset.to;if(t){$('dayDate').value=t;renderDay()}});
 $('dayToday').addEventListener('click',()=>{$('dayDate').value=today();renderDay()});
@@ -1105,9 +1150,9 @@ function bdgList(name){
  const ok=t=>BDG_TIERS.includes(t)?t:'bronze';
  if(C.cr.on&&p.crN)add(C.cr.name,bdgTpl(C.cr.desc,{n:p.crN}),'record_holder_gold',1,String(p.crN));
  const staged=(k,n,svgKey,hex,num,l)=>{const s=C[k].on?bdgStage(C[k].stages,n):null;if(s)add(s.name,bdgTpl(C[k].desc,{n,min:s.min}),svgKey+'_'+ok(s.tier),hex,num,l)};
+ {const n=cnt(p.evs);staged('single',n,'single_complete',1,n+'/'+N)}
  {const n=cnt(p.won);staged('gc',n,'grand_champion',1,n+'/'+N)}
  if(C.pbq.on){const it=(C.pbq.items||[]).find(x=>x.id===bdgPbqId(p.pbq.size,p.pbq.has('333fm')));if(it)add(it.name,bdgTpl(C.pbq.desc,{n:p.pbq.size}),'pbq_master_'+ok(it.tier),1,p.pbq.size+'/4')}
- {const n=cnt(p.evs);staged('single',n,'single_complete',1,n+'/'+N)}
  {const kl=C.kyoyo.on?bdgKyoLines(p,C.kyoyo.events,OF):[],kn=kl.filter(x=>x[1]).length;staged('kyoyo',kn,'kyoyo',1,kn+'/'+N,kl)}
  if(C.sub.on){
   const vals=(C.sub.values||[]).filter(v=>BDG_SUB_ALL.includes(v)).slice().sort((a,b)=>a-b);
@@ -1140,12 +1185,12 @@ function bdgSrc(k){
  if(!u){u='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(light?bdgLight(BDG_SVG[k]):BDG_SVG[k]);_bdgSrc.set(ck,u)}
  return u;
 }
-function bdgRefresh(){if(curPg==='player')renderPlayer()}
+function bdgRefresh(){if(curPg==='player')renderPlayer();try{if(titleModalOpen())openTitleModal()}catch(e){}}
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',bdgRefresh)}catch(e){}
 function bdgHtml(name){
  const L=bdgList(name),btn=b=>`<button type="button" class="bimg" data-n="${esc(b.nm)}" data-d="${esc(b.d)}"${b.l&&b.l.length?` data-l="${esc(J(b.l))}"`:''} aria-label="${esc(b.nm+'：'+b.d+(b.l?'　'+b.l.map(x=>x[0]+(x[1]?'（達成）':'')).join('、'):''))}"><img src="${bdgSrc(b.svg)}" alt="" draggable="false">${b.n!==undefined?`<i>${esc(b.n)}</i>`:''}</button>`;
  const row=(a,cls)=>a.length?`<div class="brow${cls||''}">${a.map(btn).join('')}</div>`:'';
- return row(L.filter(b=>b.hex))+row(L.filter(b=>!b.hex),' low'); // 1行目：六角形、2行目：円形
+ return row(L.filter(b=>b.hex))+row(L.filter(b=>!b.hex),' low'); // 1行目：金銀銅の大きい印（CR→全種目→優勝→PBQ→教養の順）、2行目：円形
 }
 // ツールチップ：マウスは重ねると表示、タッチはタップで表示（もう一度タップするか他の場所を押すまで、時間では消えない）
 {
@@ -1171,6 +1216,75 @@ function bdgHtml(name){
  document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
  addEventListener('scroll',hide,true);addEventListener('resize',hide);addEventListener('hashchange',hide);
 }
+
+function titleCube(k){
+ const i='c'+(++_cubeUid),P={t:[50,6],ur:[89,28.5],lr:[89,73.5],b:[50,96],ll:[11,73.5],ul:[11,28.5],c:[50,51]};
+ const pt=a=>a.join(','),add=(a,b,s=1)=>[a[0]+b[0]*s,a[1]+b[1]*s];
+ const faces=[[P.ul,[39,-22.5],[39,22.5],'top'],[P.ul,[39,22.5],[0,45],'l'],[P.c,[39,-22.5],[0,45],'r']];
+ let fills='',grv='';
+ faces.forEach(([O,U,V,n])=>{
+  const poly=[O,add(O,U),add(add(O,U),V),add(O,V)].map(pt).join(' ');
+  const sh=n==='l'?'var(--sh-l)':n==='r'?'var(--sh-r)':'0';
+  fills+=`<polygon points="${poly}" fill="url(#${i}g)"/><polygon points="${poly}" fill="#000" fill-opacity="${sh}"/>`;
+  [1/3,2/3].forEach(t=>{
+   const a=add(O,U,t),b=add(a,V),c=add(O,V,t),d=add(c,U);
+   grv+=`M${pt(a)}L${pt(b)}M${pt(c)}L${pt(d)}`;
+  });
+ });
+ const hex=[P.t,P.ur,P.lr,P.b,P.ll,P.ul].map(pt).join(' ');
+ const st=[1,2,3,4,5].map(n=>`<stop offset="${(n-1)*25}%" style="stop-color:var(--${k}-s${n})"/>`).join('');
+ const opal=k==='opal'||k==='platinum';
+ return `<svg class="cube" viewBox="0 0 100 100" aria-hidden="true"><defs>
+ <linearGradient id="${i}g" gradientUnits="userSpaceOnUse" x1="8" y1="6" x2="92" y2="96">${st}</linearGradient>
+ <linearGradient id="${i}h" gradientUnits="userSpaceOnUse" x1="14" y1="10" x2="70" y2="50"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <linearGradient id="${i}s" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <clipPath id="${i}c"><polygon points="${hex}"/></clipPath></defs>
+ <g clip-path="url(#${i}c)">${fills}
+ <polygon points="${[P.ul,P.t,P.ur,P.c].map(pt).join(' ')}" fill="url(#${i}h)"/>
+ <path class="grv" d="${grv}"/><path class="grl" d="${grv}" transform="translate(0,.8)"/>
+ ${opal?`<rect class="shine" x="0" y="0" width="26" height="100" fill="url(#${i}s)"/>`:''}</g>
+ <polygon class="edge" points="${hex}" stroke="var(--${k}-edge)"/>
+ <path d="M${pt(P.ul)}L${pt(P.c)}L${pt(P.ur)}M${pt(P.c)}L${pt(P.b)}" fill="none" stroke="var(--${k}-edge)" stroke-opacity=".55" stroke-width="1" stroke-linejoin="round"/></svg>`;
+}
+
+// ================= メンバー称号（黄金の証の数で決まる） =================
+let _cubeUid=0;
+const TTIERS=[{k:'bronze',name:'ブロンズメンバー',n:1},{k:'silver',name:'シルバーメンバー',n:2},{k:'gold',name:'ゴールドメンバー',n:3},{k:'platinum',name:'プラチナメンバー',n:4},{k:'opal',name:'オパールメンバー',n:5}];
+const TCHECK='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>';
+const TPBQ_N={bld1:1,bld2:2,bld3:3,fmc:1,fmcbld:2};
+// 黄金の証になる5種類（CR・全種目・優勝・PBQ・教養）。条件の文は設定（BDGCFG）から作り、オフや金の段階がないものは含めない
+function titleCats(){
+ const C=bdgConf(),out=[],gold=k=>(C[k].stages||[]).filter(s=>s.tier==='gold').sort((a,b)=>a.min-b.min)[0];
+ if(C.cr.on)out.push({svg:'record_holder_gold',nm:C.cr.name,cond:bdgTpl(C.cr.desc,{n:1})});
+ for(const [k,svg] of [['single','single_complete_gold'],['gc','grand_champion_gold']]){const s=C[k].on&&gold(k);if(s)out.push({svg,nm:s.name,cond:bdgTpl(C[k].desc,{n:s.min,min:s.min})})}
+ if(C.pbq.on){const it=(C.pbq.items||[]).find(x=>x.tier==='gold');if(it)out.push({svg:'pbq_master_gold',nm:it.name,cond:it.id==='all'?'3BLD・4BLD・5BLD・FMCのすべてで平均記録を獲得':bdgTpl(C.pbq.desc,{n:TPBQ_N[it.id]||1})})}
+ {const s=C.kyoyo.on&&gold('kyoyo');if(s)out.push({svg:'kyoyo_gold',nm:s.name,cond:bdgTpl(C.kyoyo.desc,{n:s.min,min:s.min})})}
+ return out;
+}
+// 称号：計算済みの tier が金のもの（hex＝1 の5種類）を数える。0個なら null
+function titleOf(name){
+ const owned=new Set(bdgList(name).filter(b=>b.hex&&/_gold$/.test(b.svg)).map(b=>b.svg));
+ return owned.size?{n:owned.size,t:TTIERS[Math.min(owned.size,TTIERS.length)-1],owned}:null;
+}
+const titleVars=t=>`--tedge:var(--${t.k}-edge);--ttext:var(--${t.k}-text)`;
+function titleChip(ti,tot){return `<button type="button" class="tchip${ti.t.k==='opal'?' opal-anim':''}" style="${titleVars(ti.t)}" aria-label="${ti.t.name}（黄金の証 ${ti.n}/${tot}）">${titleCube(ti.t.k)}<span class="tn">${ti.t.name}</span></button>`}
+function titleModalHtml(ti){
+ const cats=titleCats(),tot=cats.length,t=ti.t,n=ti.n;
+ const head=`<div class="modal-head"><div class="mt${t.k==='opal'?' opal-anim':''}" style="--ttext:var(--${t.k}-text)">${titleCube(t.k)}<div><b id="titleModalTitle">${t.name}</b><span>黄金の証 ${n}/${tot}</span></div></div><button type="button" class="mx" id="titleClose" aria-label="閉じる">×</button></div>`;
+ const gl=cats.map(c=>`<div class="gr${ti.owned.has(c.svg)?' ok':''}"><img alt="" src="${bdgSrc(c.svg)}"><div class="tx"><b>${esc(c.nm)}</b><span>${esc(c.cond)}</span></div><div class="ck">${TCHECK}</div></div>`).join('');
+ const tt=TTIERS.filter(x=>x.n<=tot).map(x=>`<div class="r ${x.n<n?'done':x.n===n?'cur':''}${x.k==='opal'?' opal-anim':''}"><span>${titleCube(x.k)}</span><span>${x.name}</span><em>${x.n}つ達成</em></div>`).join('');
+ return head+`<div class="mh">黄金の証（${tot}種類）</div><div class="gl">${gl}</div><div class="mh">称号の段階</div><div class="tt">${tt}</div>`;
+}
+const titleModalOpen=()=>$('titleModal').style.display==='flex';
+function openTitleModal(){
+ const ti=titleOf(curPlayer.trim());if(!ti){closeTitleModal();return}
+ $('titleModalCard').innerHTML=titleModalHtml(ti);
+ $('titleModal').style.display='flex';
+ $('titleClose').addEventListener('click',closeTitleModal);
+}
+function closeTitleModal(){$('titleModal').style.display='none'}
+$('titleModal').addEventListener('click',e=>{if(e.target===$('titleModal'))closeTitleModal()});
+$('plName').addEventListener('click',e=>{if(e.target.closest('.tchip'))openTitleModal()});
 
 function render(){computeBadges();renderDay();renderCutech();if(curPg==='records')renderRecords()}
 function setHtml(el,html){if(el.dataset.h!==html){el.innerHTML=html;el.dataset.h=html}}
@@ -1310,7 +1424,7 @@ $('recMore').addEventListener('click',()=>{recLimit+=REC_PAGE;renderRecords()});
 const plink=n=>`<a class="plink" href="#player=${encodeURIComponent(n)}">${esc(n)}</a>`;
 function renderPlayer(){
  const name=curPlayer.trim(),mine=records.filter(r=>r.name.trim()===name);
- $('plName').textContent=name;
+ {const ti=mine.length?titleOf(name):null;setHtml($('plName'),`<span>${esc(name)}</span>${ti?titleChip(ti,titleCats().length):''}`)}
  $('plAllPanel').style.display=mine.length?'':'none';
  setHtml($('plBadges'),mine.length?bdgHtml(name):'');
  if(!mine.length){$('plMeta').textContent='';$('plPB').innerHTML=`<div class="empty" style="display:block">${dataLoaded?'この競技者の記録はありません。':'記録を読み込み中…'}</div>`;return}
