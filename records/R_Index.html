@@ -25,20 +25,21 @@ input[type=checkbox]{width:18px;height:18px;padding:0;margin:0;accent-color:var(
 .pf-nav{justify-content:flex-start}.pf-lab{min-width:9em;text-align:center}
 .pf-custom{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}.pf-custom .field{margin-bottom:4px}.pf-warn{margin:0 0 8px}
 .brk{display:none}.fchip{display:inline-flex;align-items:center;gap:2px;background:var(--btn2);border:1px solid var(--field-line);border-radius:999px;padding:2px 4px 2px 12px;font-size:.82rem}.fchip button{border:0;background:none;color:inherit;font:inherit;font-size:1rem;line-height:1;padding:4px 8px;cursor:pointer;border-radius:999px}
+.vsw{display:none;min-height:0;padding:3px;flex:none}.vsw button{display:flex;align-items:center;justify-content:center;width:40px;height:34px;padding:0;flex:none}@media(max-width:640px){.vsw{display:flex;margin-left:auto}}
 @media(max-width:640px){
  #pageRecords table.cards,.cards tbody,.cards tr,.cards td{display:block;width:100%}
  .cards thead{display:none}
  .cards tr{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;border:1px solid var(--line);border-radius:14px;padding:8px 14px;margin-bottom:10px;background:var(--field)}
- #recordRows td:nth-child(n){display:block;flex:none;width:auto;padding:3px 0;border:0;white-space:normal;text-align:left;min-width:0}
- #recordRows td::before{content:none}
- #recordRows td:nth-child(-n+4){order:1}
- #recordRows td.brk{display:block;flex:0 0 100%;width:100%;padding:0;height:0}
- #recordRows td.brk1{order:2}#recordRows td.brk2{order:4}
- #recordRows td.c-best,#recordRows td.c-avg{order:3;font-size:1.2rem;padding:6px 0 4px;white-space:nowrap}
- #recordRows td.c-best::before,#recordRows td.c-avg::before{content:attr(data-label);color:var(--muted);font-weight:700;font-size:.78rem;margin-right:6px}
- #recordRows td.c-att{order:5;padding:2px 0}
- #recordRows td.c-worst,#recordRows td.na,#recordRows td:empty{display:none}
- #recordRows td.brk:empty{display:block}
+ .cards #recordRows td:nth-child(n){display:block;flex:none;width:auto;padding:3px 0;border:0;white-space:normal;text-align:left;min-width:0}
+ .cards #recordRows td::before{content:none}
+ .cards #recordRows td:nth-child(-n+4){order:1}
+ .cards #recordRows td.brk{display:block;flex:0 0 100%;width:100%;padding:0;height:0}
+ .cards #recordRows td.brk1{order:2}#recordRows td.brk2{order:4}
+ .cards #recordRows td.c-best,#recordRows td.c-avg{order:3;font-size:1.2rem;padding:6px 0 4px;white-space:nowrap}
+ .cards #recordRows td.c-best::before,#recordRows td.c-avg::before{content:attr(data-label);color:var(--muted);font-weight:700;font-size:.78rem;margin-right:6px}
+ .cards #recordRows td.c-att{order:5;padding:2px 0}
+ .cards #recordRows td.c-worst,#recordRows td.na,#recordRows td:empty{display:none}
+ .cards #recordRows td.brk:empty{display:block}
 }
 #detailTitle{font-size:1.6rem;font-weight:800}
 .scs .exl{margin:4px 0 0;padding-left:0;list-style:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;word-break:break-word}
@@ -151,7 +152,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
   <div class="field" style="margin-bottom:8px"><label for="rfSort">並び順</label><select id="rfSort"><option value="new">新しい順</option><option value="old">古い順</option><option value="best">ベスト順</option><option value="avg">平均順</option></select></div>
   <div class="field" style="margin-bottom:8px"><label id="rfPLabel">期間</label><div id="rfPeriod" role="group" aria-labelledby="rfPLabel"></div></div>
   <div id="rfChips" class="row" style="margin:0 0 8px;gap:6px"></div>
-  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span></div>
+  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span><span class="seg vsw" id="viewSw"><button type="button" data-v="table" title="表で表示" aria-label="表で表示"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button><button type="button" data-v="cards" title="カードで表示" aria-label="カードで表示"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="8" rx="2"/><rect x="3" y="13" width="18" height="8" rx="2"/></svg></button></span></div>
  <div class="table-wrap"><table class="cards"><thead><tr><th>競技日</th><th>種目</th><th>競技者</th><th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th><th></th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty" id="empty">記録はまだありません。</div></div>
 </section>
 <div id="recMoreRow" class="row" style="display:none;justify-content:center;margin:12px 0"><button class="btn secondary" type="button" id="recMore">もっと見る</button></div>
@@ -1496,6 +1497,12 @@ document.addEventListener('touchstart',function(){},{passive:true});
 
 // 指で操作する端末では、長押しメニューを出さない（入力欄・スクランブルや解答の文字は除く）
 document.addEventListener('contextmenu',e=>{if(matchMedia('(pointer:coarse)').matches&&!e.target.closest('input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody'))e.preventDefault()});
+
+{const KEY='cutech-rec-view-v1',tb=document.querySelector('#pageRecords table'),sw=document.getElementById('viewSw');
+const setV=(v,save)=>{tb.classList.toggle('cards',v==='cards');sw.querySelectorAll('button').forEach(b=>{const on=b.dataset.v===v;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});if(save){try{localStorage.setItem(KEY,v)}catch{}}};
+let sv=null;try{sv=localStorage.getItem(KEY)}catch{}
+setV(sv==='table'?'table':'cards',false);
+sw.addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(b)setV(b.dataset.v,true)})}
 </script>
 </body>
 </html>
