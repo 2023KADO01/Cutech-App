@@ -118,8 +118,8 @@ button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active
 #fmcKb .seg button:disabled{opacity:.35;cursor:not-allowed}
 #fmcKb .kbS{font-size:1rem}
 #fmcKb .kbW{grid-column:span 2}#fmcKb .kbW4{grid-column:span 4}
-#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:5;display:flex;gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
-#fmcKb .kbMore button{flex:1;padding:12px 0;font-size:1.2rem}
+#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:5;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
+#fmcKb .kbMore button{padding:13px 0;font-size:1.2rem}
 #fmcKb button.on{background-color:var(--chip-active);border-color:var(--accent);color:var(--accent)}
 #attemptGrid input.kbOn,#attemptGrid textarea.kbOn{outline:2px solid var(--accent);outline-offset:0;background-image:linear-gradient(color-mix(in srgb,var(--accent) 10%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))}
 #fmcKb button:active{filter:brightness(.9)}
@@ -1591,7 +1591,7 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
  const SP=w=>`<button type="button" data-k=" " data-t="c" class="${w}" aria-label="スペース"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v6h16v-6"/></svg></button>`;
  const rot=()=>K('R','R','f','R')+K('U','U','f','U')+K('F','F','f','F')+K("'","'",'m')+DEL
   +K('L','L','f','L')+K('D','D','f','D')+K('B','B','f','B')+K('2','2','m');
- const MORE=['*','#','^','+','-','='];
+ const MORE=['!','?','+','-','=','*','%','&','$','#','^','[',']']; // よく使いそうな順。カッコ類は隣同士
  kbRender=()=>{
   const mo=fmcMo[kbTarget],f=mo?'c':kbField,sig=[f,mo,kbNum,kbMore].join();
   if(kb.dataset.sig===sig)return;kb.dataset.sig=sig;
@@ -1599,7 +1599,7 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
   if(f==='t')h+=rot()+'<span></span>'+K('x','x','f')+K('y','y','f')+K('z','z','f')+K('w','w','m');
   else if(!kbNum)h+=rot()+K('w','w','m')+K('x','x','f')+K('y','y','f')+K('z','z','f')+C('(')+C(')')
    +'<button type="button" data-act="num" class="kbS">123</button>'+C('/')+`<button type="button" data-act="more" class="kbS${kbMore?' on':''}" aria-label="その他の記号" aria-expanded="${kbMore}">…</button>`+SP('kbW');
-  else h+=C('1')+C('2')+C('3')+C('(')+DEL+C('4')+C('5')+C('6')+C(')')+C('/')+C('7')+C('8')+C('9')+C('0')
+  else h+=C('1')+C('2')+C('3')+C('/')+DEL+C('4')+C('5')+C('6')+C('(')+C(')')+C('7')+C('8')+C('9')+C('0')
    +`<button type="button" data-act="more" class="kbS${kbMore?' on':''}" aria-label="その他の記号" aria-expanded="${kbMore}">…</button>`
    +'<button type="button" data-act="sym" class="kbS">RUF</button>'+SP('kbW4');
   if(kbMore&&f==='c')h+='<div class="kbMore" role="group" aria-label="その他の記号">'+MORE.map(m=>C(m)).join('')+'</div>';
