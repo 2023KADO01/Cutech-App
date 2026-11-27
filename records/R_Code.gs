@@ -26,7 +26,7 @@ const DIFF_MAX = 2000;   // これ以上の差分は全件読み込みにする
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('R_Index')
     .setTitle('Cutech Records')
-    .setFaviconUrl('https://2023kado01.github.io/cutech-icon/cutechicon.png')
+    .setFaviconUrl('https://raw.githubusercontent.com/2023KADO01/Cutech-App/main/assets/cutechicon.png')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, interactive-widget=resizes-content');
 }
 

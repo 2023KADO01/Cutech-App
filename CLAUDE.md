@@ -25,6 +25,7 @@ records/   # Cutech Records (R): 記録閲覧アプリ（R_Code.gs, R_Index.html
 .github/workflows/update-cubing.yml  # cubing.js（スクランブル生成）の配布元を毎週確認し、変わっていれば更新PRを作る
 .github/scripts/fetch-cubing.mjs     # 上のワークフローが使うスクリプト
 vendor/cubing/                 # cubing.js の固定コピー（README.md 参照）
+assets/cutechicon.png          # ファビコン（L・R の setFaviconUrl が参照）
 ```
 
 - appsscript.json はリポジトリで管理しない（デプロイ時に Apps Script 上のものを取ってきて使う）。
