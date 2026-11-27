@@ -59,13 +59,19 @@ function readAll_(name) {
 }
 function writeRows_(name, rows, append) {
   const s = sh_(name), w = SHEETS[name].length;
-  let start = 2;
-  if (append) start = Math.max(s.getLastRow() + 1, 2);
-  else if (s.getLastRow() > 1) s.getRange(2, 1, s.getLastRow() - 1, w).clearContent();
-  if (!rows.length) return;
-  const r = s.getRange(start, 1, rows.length, w);
-  r.setNumberFormat('@');            // 日付や数字が自動変換されないよう文字列固定
-  r.setValues(rows);
+  const last = s.getLastRow();
+  const start = append ? Math.max(last + 1, 2) : 2;
+  if (rows.length) {
+    const r = s.getRange(start, 1, rows.length, w);
+    r.setNumberFormat('@');            // 日付や数字が自動変換されないよう文字列固定
+    r.setValues(rows);
+  }
+  if (append || last < 2) return;
+  // 上書きモード：先に消さず、新しい内容を2行目から上書きしてから、余った末尾の行だけ消す
+  const extra = last - 1 - rows.length;
+  if (extra <= 0) return;
+  if (rows.length) s.deleteRows(2 + rows.length, extra);
+  else s.getRange(2, 1, extra, w).clearContent();   // 全行を消すことはできない（見出し行しか残らない）ので中身だけ消す
 }
 function parse_(v) { try { return JSON.parse(v); } catch (e) { return null; } }
 function props_() { return PropertiesService.getScriptProperties(); }
@@ -166,6 +172,9 @@ function apply(ops, auth, dev) {
   try {
     const recs = readAll_('records');
     const recIds = new Set(recs.map(r => String(r[0])));
+    const rejected = [];   // 保存しなかった操作（画面に知らせる）
+    const rej = (o, id, code, msg) => rejected.push({ t: o.t, id: String(id === undefined || id === null ? '' : id).slice(0, 80), code: code, msg: msg });
+    const savedNames = new Set(), pendNames = [];   // ログインなしのとき、名前の追加は記録が保存された名前だけにする
     const newRows = [], updRows = new Map(), delIds = new Set();
     let names = readAll_('names').map(r => String(r[0])), namesDirty = false;
     const scrMap = new Map(readAll_('scrambles').map(r => [String(r[0]), r]));
@@ -178,14 +187,18 @@ function apply(ops, auth, dev) {
       switch (o.t) {
         case 'addRec': {
           const r = cleanRec_(o.rec);
-          if (!r || recIds.has(r.id) || recIds.size >= MAX_RECORDS) break;
+          if (!r) { rej(o, o.rec && o.rec.id, 'invalid', '記録の内容が正しくありません'); break; }
+          if (recIds.has(r.id)) { savedNames.add(r.name.trim()); break; }   // 再送で既に保存済み（エラーにしない）
+          if (recIds.size >= MAX_RECORDS) { rej(o, r.id, 'limit', '保存できる記録数の上限に達しています'); break; }
+          savedNames.add(r.name.trim());
           newRows.push([r.id, r.date, r.event, r.name, JSON.stringify(r)]);
           recIds.add(r.id); log.push(['records', 'put', r.id, JSON.stringify(r)]);
           break;
         }
         case 'updRec': {
           const r = cleanRec_(o.rec);
-          if (!r || !recIds.has(r.id)) break;
+          if (!r) { rej(o, o.rec && o.rec.id, 'invalid', '記録の内容が正しくありません'); break; }
+          if (!recIds.has(r.id)) { rej(o, r.id, 'notfound', '更新する記録が見つかりません'); break; }
           const idx = newRows.findIndex(x => x[0] === r.id);
           const row = [r.id, r.date, r.event, r.name, JSON.stringify(r)];
           if (idx >= 0) newRows[idx] = row; else updRows.set(r.id, row);
@@ -194,7 +207,7 @@ function apply(ops, auth, dev) {
         }
         case 'delRec': {
           const id = String(o.id);
-          if (!recIds.has(id)) break;
+          if (!recIds.has(id)) { rej(o, id, 'notfound', '削除する記録が見つかりません'); break; }
           recIds.delete(id); updRows.delete(id);
           const idx = newRows.findIndex(x => x[0] === id);
           if (idx >= 0) newRows.splice(idx, 1); else delIds.add(id);
@@ -203,60 +216,103 @@ function apply(ops, auth, dev) {
         }
         case 'addName': {
           const n = String(o.name || '').trim();
-          if (!n || n.length > 80) break;
-          names = [n].concat(names.filter(x => x !== n)).slice(0, 500); namesDirty = true;
+          if (!n || n.length > 80) { rej(o, n, 'invalid', '名前が正しくありません'); break; }
+          if (needAdmin) { names = [n].concat(names.filter(x => x !== n)).slice(0, 500); namesDirty = true; }
+          else pendNames.push([o, n]);   // ログインなし：記録の処理がすべて終わってから判断する
           break;
         }
         case 'delName':
           names = names.filter(x => x !== o.name); namesDirty = true;
           break;
         case 'addScr': case 'updScr': {
-          const c = cleanScr_(o.scr); if (!c) break;
+          const c = cleanScr_(o.scr);
+          if (!c) { rej(o, o.scr && o.scr.id, 'invalid', 'スクランブルの内容が正しくありません'); break; }
           if (o.t === 'addScr' && scrMap.has(c.id)) break;
-          if (o.t === 'updScr' && !scrMap.has(c.id)) break;
+          if (o.t === 'updScr' && !scrMap.has(c.id)) { rej(o, c.id, 'notfound', '更新するスクランブルが見つかりません'); break; }
           scrMap.set(c.id, [c.id, c.date, c.event, JSON.stringify(c)]); scrDirty = true;
           log.push(['scrambles', 'put', c.id, JSON.stringify(c)]);
           break;
         }
         case 'genScr': {
           // ログインなしで保存できるのは、「今日の日付」で「まだ保存されていない」種目・形式のスクランブルだけ
-          const c = cleanScr_(o.scr); if (!c) break;
-          if (scrMap.has(c.id)) break;
-          if (c.date !== Utilities.formatDate(new Date(), APP_TZ, 'yyyy-MM-dd')) break;
+          const c = cleanScr_(o.scr);
+          if (!c) { rej(o, o.scr && o.scr.id, 'invalid', 'スクランブルの内容が正しくありません'); break; }
+          if (scrMap.has(c.id)) break;   // 再送で既に保存済み
+          if (c.date !== Utilities.formatDate(new Date(), APP_TZ, 'yyyy-MM-dd')) { rej(o, c.id, 'date', '日付が今日（日本時間）ではないため、保存できませんでした'); break; }
           const f = c.format || {};
           let dup = false;
           scrMap.forEach(r => {
             const x = parse_(r[3]);
             if (x && x.date === c.date && x.event === c.event && x.format && x.format.type === f.type && x.format.n === f.n) dup = true;
           });
-          if (dup) break;
+          if (dup) { rej(o, c.id, 'dup', '同じ日・種目・形式のスクランブルが既に保存されています'); break; }
           scrMap.set(c.id, [c.id, c.date, c.event, JSON.stringify(c)]); scrDirty = true;
           log.push(['scrambles', 'put', c.id, JSON.stringify(c)]);
           break;
         }
         case 'setEvents': {
-          const c = cleanEvents_(o.events); if (c === null) break;
+          const c = cleanEvents_(o.events);
+          if (c === null) { rej(o, '', 'invalid', '種目の設定が正しくありません'); break; }
           evNew = c; log.push(['events', 'set', '', JSON.stringify(c)]);
           break;
         }
         case 'setBadges': {
-          const c = cleanBadges_(o.badges); if (c === null) break;
+          const c = cleanBadges_(o.badges);
+          if (c === null) { rej(o, '', 'invalid', 'バッジの設定が正しくありません'); break; }
           bdNew = c; log.push(['badges', 'set', '', JSON.stringify(c)]);
           break;
         }
         case 'delScr': {
           const id = String(o.id);
-          if (!scrMap.delete(id)) break;
+          if (!scrMap.delete(id)) { rej(o, id, 'notfound', '削除するスクランブルが見つかりません'); break; }
           scrDirty = true; log.push(['scrambles', 'del', id, '']);
           break;
         }
       }
     }
+    // ログインなしの名前の追加：既にある名前は先頭へ移すだけ。新しい名前は、同じ送信で記録が保存された名前だけ、一覧が500件未満のときに限り追加する
+    for (const [o, n] of pendNames) {
+      if (names.indexOf(n) >= 0) names = [n].concat(names.filter(x => x !== n));
+      else if (savedNames.has(n) && names.length < 500) names = [n].concat(names);
+      else { rej(o, n, 'invalid', '記録が保存されなかった、または名前の一覧がいっぱいのため、名前は追加しませんでした'); continue; }
+      namesDirty = true;
+    }
     if (namesDirty) log.push(['names', 'set', '', JSON.stringify(names)]);
 
     if (delIds.size || updRows.size) {
-      const kept = recs.filter(r => !delIds.has(String(r[0]))).map(r => updRows.get(String(r[0])) || r);
-      writeRows_('records', kept.concat(newRows), false);
+      // 該当する行だけを書き換える（全消しはしない）。読み込んだ順＝シート上の行番号（2始まり）で対応づける
+      const updAt = [], delAt = [];
+      recs.forEach((r, i) => {
+        const id = String(r[0]);
+        if (delIds.has(id)) delAt.push(i + 2);
+        else if (updRows.has(id)) updAt.push(i + 2);
+      });
+      if (delAt.length > 200 || updAt.length > 200) {
+        // 件数が多いときは、新しい内容を2行目から一度に上書きして、余った末尾の行だけ消す
+        const kept = recs.filter(r => !delIds.has(String(r[0]))).map(r => updRows.get(String(r[0])) || r);
+        writeRows_('records', kept.concat(newRows), false);
+      } else {
+        const s = sh_('records');
+        for (const n of updAt) {
+          const rg = s.getRange(n, 1, 1, 5);
+          rg.setNumberFormat('@');
+          rg.setValues([updRows.get(String(recs[n - 2][0]))]);
+        }
+        if (newRows.length) writeRows_('records', newRows, true);
+        if (delAt.length) {
+          if (recs.length - delAt.length + newRows.length === 0) s.getRange(2, 1, recs.length, 5).clearContent();   // 全行は削除できないので中身だけ消す
+          else {
+            delAt.sort((a, b) => b - a);   // 下の行から消して、行番号がずれないようにする
+            let i = 0;
+            while (i < delAt.length) {
+              let j = i;
+              while (j + 1 < delAt.length && delAt[j + 1] === delAt[j] - 1) j++;
+              s.deleteRows(delAt[j], j - i + 1);   // 連続する行はまとめて削除
+              i = j + 1;
+            }
+          }
+        }
+      }
     } else if (newRows.length) {
       writeRows_('records', newRows, true);
     }
@@ -275,7 +331,7 @@ function apply(ops, auth, dev) {
       resumeBackupIfPaused_();
     }
     SpreadsheetApp.flush();
-    return { ok: true, rev: rev };
+    return { ok: true, rev: rev, rejected: rejected };
   } finally {
     lock.releaseLock();
   }
@@ -291,22 +347,77 @@ function pruneLog_() {
 }
 
 /* ---------- 検証 ---------- */
+// 実在する日付か（yyyy-MM-dd）
+function dateOk_(d) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d));
+  if (!m) return false;
+  const t = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return t.getUTCFullYear() === Number(m[1]) && t.getUTCMonth() === Number(m[2]) - 1 && t.getUTCDate() === Number(m[3]);
+}
+// 記録は、画面が実際に使うフィールドだけを許可して作り直す（未知のキーは捨てる）。
+// 画面側（L_Index.html）が記録・試技に設定するフィールドを増やしたら、ここにも足すこと。
+function intIn_(v, min, max) { return typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max; }
+function cleanAtt_(a) {
+  if (!a || typeof a !== 'object' || Array.isArray(a)) return null;
+  if (a.kind !== 'OK' && a.kind !== 'DNF' && a.kind !== 'DNS') return null;
+  const o = { kind: a.kind };
+  if (a.time === null) o.time = null;
+  else if (a.time !== undefined) {
+    if (typeof a.time !== 'number' || !isFinite(a.time) || a.time < 0 || a.time > 10000000) return null;
+    o.time = a.time;
+  }
+  if (a.plus2 !== undefined) { if (typeof a.plus2 !== 'boolean') return null; o.plus2 = a.plus2; }
+  // MBLD
+  if (a.points !== undefined) { if (!intIn_(a.points, -10000, 10000)) return null; o.points = a.points; }
+  if (a.solved !== undefined) { if (!intIn_(a.solved, 0, 10000)) return null; o.solved = a.solved; }
+  if (a.attempted !== undefined) { if (!intIn_(a.attempted, 0, 10000)) return null; o.attempted = a.attempted; }
+  // Exスクランブルの試技（1か2）
+  if (a.ex !== undefined) { if (!intIn_(a.ex, 1, 9)) return null; o.ex = a.ex; }
+  // FMCの解答とコメント
+  if (a.sol !== undefined) { if (typeof a.sol !== 'string' || a.sol.length > 1000) return null; o.sol = a.sol; }
+  if (a.cm !== undefined) { if (typeof a.cm !== 'string' || a.cm.length > 1000) return null; o.cm = a.cm; }
+  return o;
+}
 function cleanRec_(r) {
-  if (!r || typeof r !== 'object') return null;
+  if (!r || typeof r !== 'object' || Array.isArray(r)) return null;
   if (JSON.stringify(r).length > 4000) return null;
   if (!/^[\w-]{1,40}$/.test(String(r.id))) return null;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(r.date))) return null;
+  if (!dateOk_(r.date)) return null;
   if (typeof r.event !== 'string' || !r.event || r.event.length > 80) return null;
   if (typeof r.name !== 'string' || !r.name.trim() || r.name.length > 80) return null;
   if (!Array.isArray(r.attempts) || r.attempts.length < 1 || r.attempts.length > 5) return null;
-  r.id = String(r.id);
-  return r;
+  const o = { id: String(r.id), date: String(r.date), event: r.event, name: r.name };
+  if (r.format !== undefined && r.format !== null) {
+    const f = r.format;
+    if (typeof f !== 'object' || Array.isArray(f) || ['ao', 'mo', 'bo'].indexOf(f.type) < 0 || !intIn_(f.n, 1, 5)) return null;
+    o.format = { type: f.type, n: f.n };
+  }
+  o.attempts = [];
+  for (const a of r.attempts) {
+    const c = cleanAtt_(a);
+    if (!c) return null;
+    o.attempts.push(c);
+  }
+  // best / worst / average は画面で再計算される。保存値は文字列・数値・null だけ
+  for (const k of ['best', 'worst', 'average']) {
+    const v = r[k];
+    if (v === undefined) continue;
+    if (v === null || (typeof v === 'number' && isFinite(v)) || (typeof v === 'string' && v.length <= 40)) o[k] = v;
+    else return null;
+  }
+  for (const k of ['createdAt', 'updatedAt']) {
+    const v = r[k];
+    if (v === undefined) continue;
+    if (typeof v !== 'string' || v.length > 40) return null;
+    o[k] = v;
+  }
+  return o;
 }
 function cleanScr_(s) {
   if (!s || typeof s !== 'object') return null;
   if (JSON.stringify(s).length > 15000) return null;
   if (!/^[\w-]{1,40}$/.test(String(s.id))) return null;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(s.date))) return null;
+  if (!dateOk_(s.date)) return null;
   if (typeof s.event !== 'string' || !s.event || s.event.length > 80) return null;
   if (!Array.isArray(s.scrambles) || s.scrambles.length > 5) return null;
   s.id = String(s.id);

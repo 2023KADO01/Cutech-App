@@ -545,7 +545,15 @@ async function doSync(){
   const res=await gs('apply',ops,adminAuth,DEV);
   if(res&&res.error){const e=new Error(res.error);e.server=true;e.auth=!!res.authError;e.temp=/集中/.test(res.error);throw e}
   snap=cur;unsentIds.clear();outboxClear();retryN=0;clearTimeout(retryTimer);bar('');
-  await loadAll();repaintLists();
+  const rej=(res&&res.rejected||[]).filter(x=>x&&x.code!=='dup'&&x.t!=='addName'); // addNameの却下は知らせない
+  if(res&&res.rejected&&res.rejected.length){
+   // 保存されなかった操作がある：サーバーの状態に合わせて読み直す（未送信の控えも消してある）
+   if(rej.length){
+    const lab=x=>{const o=ops.find(p=>p.t===x.t&&((p.rec&&p.rec.id)===x.id||(p.scr&&p.scr.id)===x.id||p.id===x.id));const r=o&&o.rec,s=o&&o.scr;return (r?`${r.name}　${r.event}`:s?`${s.date}　${s.event}`:x.id||x.t)+'：'+(x.msg||'保存されませんでした')};
+    alert('次の操作は保存されませんでした。\n'+rej.map(lab).join('\n'));
+   }
+   await loadAll(true);repaintLists();
+  }else{await loadAll();repaintLists()}
  }catch(e){
   const temp=!e.server||e.temp;
   if(temp&&pubOnly){scheduleRetry(ops);return}
@@ -605,7 +613,7 @@ $('loginForm').addEventListener('submit',async e=>{
  }catch(err){$('loginMsg').textContent='通信に失敗しました。'}
 });
 setInterval(()=>{if(document.visibilityState==='visible')loadAll()},30000);
-const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const today=()=>{const p={};new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).forEach(x=>{p[x.type]=x.value});return `${p.year}-${p.month}-${p.day}`}; // 端末のタイムゾーンでなく日本時間の日付（サーバーのgenScrの日付判定と合わせる）
 $('eventDate').value=today();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const BUILTIN_EV=["3x3x3 Cube", "2x2x2 Cube", "4x4x4 Cube", "5x5x5 Cube", "6x6x6 Cube", "7x7x7 Cube", "3x3x3 Blindfolded", "3x3x3 Fewest Moves", "3x3x3 One-Handed", "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1", "4x4x4 Blindfolded", "5x5x5 Blindfolded", "3x3x3 Multi-Blind", "Face Turning Octahedron"];
@@ -649,7 +657,7 @@ function solBlock(a){
  return (a.sol?row('解答',a.sol):'')+(a.cm?row('コメント',a.cm):'');
 }
 function attemptHtml(a,ev,detail){
- if(a.points!==undefined)return a.kind==='OK'?`${a.points}pt (${a.solved}/${a.attempted})<br>${fmtHMS(a.time)}`:`DNF (${a.solved}/${a.attempted})<br>${fmtHMS(a.time)}`;
+ if(a.points!==undefined)return a.kind==='OK'?`${esc(a.points)}pt (${esc(a.solved)}/${esc(a.attempted)})<br>${esc(fmtHMS(a.time))}`:`DNF (${esc(a.solved)}/${esc(a.attempted)})<br>${esc(fmtHMS(a.time))}`;
  return esc(attemptText(a,ev,detail));
 }
 // 平均の計算で除外された記録（Ao形式：ベストとワースト。DNF/DNSが1つあればそれとベスト）の番号
@@ -1536,7 +1544,7 @@ let mScrHidden=false; // スクランブル画像を閉じたままにするか
 function openScrModal(r,k){
  const att=r.attempts[k],en=findScr(r.date,r.event,fLabel(recordFormat(r))),t=en&&(att&&att.ex?(en.ex&&en.ex[att.ex-1]):en.scrambles[k]);
  $('scrModalTitle').innerHTML=`${esc(r.name)}　${evName(r.event)}`+(r.attempts.length>1?`　${k+1}回目`:'');
- const lb=att&&att.ex?`Ex${att.ex}`:'',tim=att?`<div style="margin-bottom:16px">${lb?`<div style="font-size:.95rem;font-weight:700;color:var(--muted)">${lb}</div>`:''}<div style="font-size:${isMbld(r.event)?'1.9rem':'2.7rem'};font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums">${(v=>isFmc(r.event)&&/^\d+$/.test(v)?v+'手':v)(attemptHtml(att,r.event,true))}</div></div>`:'';
+ const lb=att&&att.ex?`Ex${esc(att.ex)}`:'',tim=att?`<div style="margin-bottom:16px">${lb?`<div style="font-size:.95rem;font-weight:700;color:var(--muted)">${lb}</div>`:''}<div style="font-size:${isMbld(r.event)?'1.9rem':'2.7rem'};font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums">${(v=>isFmc(r.event)&&/^\d+$/.test(v)?v+'手':v)(attemptHtml(att,r.event,true))}</div></div>`:'';
  const img=t?scrImgHtml(r.event,t):'';
  const scrPart=t?esc(scrText(r.event,t)).replace(/\n/g,'<br>')+(img?`<div id="mImgWrap" style="${mScrHidden?'display:none':''}"><div id="mImg" style="cursor:pointer;-webkit-user-select:none;user-select:none">${img}</div><div class="muted" style="font-size:.74rem;text-align:center;margin:-2px 0 -8px;padding:8px 0;cursor:pointer">タップで閉じる</div></div><div class="scrmini" id="mMini" role="button" tabindex="0" style="${mScrHidden?'':'display:none'}">スクランブルを表示</div>`:''):`<span style="color:var(--muted);font-size:1rem">${att&&att.ex?'Exスクランブルは未入力です。':'スクランブルは未入力です。'}</span>`;
  const sb=solBlock(att);
@@ -1786,7 +1794,7 @@ function renderRecords(){
  $('recMoreRow').style.display=list.length>shown.length?'flex':'none';
  $('recMore').textContent=`もっと見る（残り${list.length-shown.length}件）`;
  {const vis=new Set(shown.map(r=>r.id));for(const id of [...selRec])if(!vis.has(id))selRec.delete(id);lastRecList=shown}
- $('recordRows').innerHTML=shown.map(r=>`<tr><td class="admin-only"><input type="checkbox" data-rsel="${esc(r.id)}"${selRec.has(r.id)?' checked':''} aria-label="選択"></td><td>${esc(r.date)}</td><td>${evShort(r.event)}</td><td>${esc(r.name)}${unsentBadge(r)}</td><td>${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td>${a?`<button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button>`:'—'}</td>`}).join('')}<td><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td>${esc(r.worst)}</td><td><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td style="white-space:nowrap"><button class="btn secondary admin-only" data-edit="${r.id}" style="padding:6px 9px;margin-right:6px">編集</button><button class="btn secondary admin-only" data-del="${r.id}" style="padding:6px 9px">削除</button></td></tr>`).join('');
+ $('recordRows').innerHTML=shown.map(r=>`<tr><td class="admin-only"><input type="checkbox" data-rsel="${esc(r.id)}"${selRec.has(r.id)?' checked':''} aria-label="選択"></td><td>${esc(r.date)}</td><td>${evShort(r.event)}</td><td>${esc(r.name)}${unsentBadge(r)}</td><td>${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td>${a?`<button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button>`:'—'}</td>`}).join('')}<td><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td>${esc(r.worst)}</td><td><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td style="white-space:nowrap"><button class="btn secondary admin-only" data-edit="${esc(r.id)}" style="padding:6px 9px;margin-right:6px">編集</button><button class="btn secondary admin-only" data-del="${esc(r.id)}" style="padding:6px 9px">削除</button></td></tr>`).join('');
  updateRecBulk();
 }
 function clearTimes(){for(let i=1;i<=5;i++){clearRow(i)}flowReset();applyEventLayout();updatePA();$('result').classList.remove('show');$('t1').focus()}
