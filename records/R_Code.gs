@@ -6,13 +6,19 @@
  * 入力用のスプレッドシートを「読む」ことだけができます。
  *
  * 使い方：
- *  1. 下の SHEET_ID に、入力用スプレッドシートのIDを貼り付ける。
+ *  1. 「プロジェクトの設定 > スクリプト プロパティ」に、プロパティ SHEET_ID を追加し、
+ *     値に入力用スプレッドシートのIDを入れる（最初の1回だけ。コードを貼り替えても消えません）。
  *     （スプレッドシートのURL  https://docs.google.com/spreadsheets/d/ ←ここの部分→ /edit  がID）
  *  2. HTMLファイルの名前は R_Index にする（この名前で読み込みます）。
  *  3. 「デプロイ → 新しいデプロイ → ウェブアプリ」
  *       次のユーザーとして実行：自分 ／ アクセスできるユーザー：全員
  */
-const SHEET_ID = 'ここにスプレッドシートのIDを貼り付けてください';
+// スプレッドシートのIDはスクリプト プロパティ SHEET_ID から読む（コードの更新のたびに貼り直さなくてよいように）
+function sheetId_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
+  if (!id) throw new Error('スクリプト プロパティ SHEET_ID が設定されていません');
+  return id.trim();
+}
 
 const WIDTH = { records: 5, names: 1, scrambles: 4, changes: 5, events: 1, badges: 1 };
 const DIFF_MAX = 2000;   // これ以上の差分は全件読み込みにする
@@ -27,7 +33,7 @@ function doGet() {
 
 /* ---------- 読み取り ---------- */
 let ss = null;   // 1回の実行の中では開いた結果を使い回す
-function ss_() { return ss || (ss = SpreadsheetApp.openById(SHEET_ID)); }
+function ss_() { return ss || (ss = SpreadsheetApp.openById(sheetId_())); }
 
 function readAll_(name) {
   const s = ss_().getSheetByName(name);
