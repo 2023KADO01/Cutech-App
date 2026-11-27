@@ -1,0 +1,62 @@
+# スクランブル生成ライブラリ（cubing.js）の配布元ビルドが変わっていないか毎週確認し、変わっていれば更新のPRを作る。
+# 初回は、手動実行（Actions の画面の Run workflow）で固定コピーを作る。
+# 事前の設定: Settings > Actions > General > Workflow permissions で
+#   「Read and write permissions」と「Allow GitHub Actions to create and approve pull requests」をオンにする。
+name: Update cubing.js
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'   # 毎週月曜 0:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-cubing
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 配布元を確認して取得する
+        id: fetch
+        run: node .github/scripts/fetch-cubing.mjs
+
+      - name: 更新のPRを作る
+        if: steps.fetch.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.fetch.outputs.version }}
+        run: |
+          branch="cubing-update/$VERSION"
+          if git ls-remote --exit-code --heads origin "$branch" > /dev/null || [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "$branch は既にあるので、PRは作りません"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add vendor/cubing log/L_Index.html
+          git commit -m "スクランブル生成ライブラリ（cubing.js）を更新：$VERSION"
+          git push origin "$branch"
+          cat > "$RUNNER_TEMP/body.md" <<EOF
+          スクランブル生成ライブラリ（cubing.js）の配布元（cdn.cubing.net の v0）のビルドが変わっていたので、固定コピーを更新しました。
+
+          - 新しい版ID：\`$VERSION\`
+          - コピーの置き場所：\`vendor/cubing/$VERSION/\`
+          - \`log/L_Index.html\` の \`CUBING_URL\` を、新しいコピーを指すように書き換えています。
+
+          マージすると、\`log/\` の変更として Cutech Log に自動デプロイされます。
+          マージ後に、Cutech Log でスクランブルの自動生成を一度試してください。
+          EOF
+          gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" \
+            --title "スクランブル生成ライブラリ（cubing.js）の更新：$VERSION" \
+            --body-file "$RUNNER_TEMP/body.md"
