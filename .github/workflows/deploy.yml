@@ -1,0 +1,67 @@
+# main にマージされたら、変更のあったアプリ（L / R）を Apps Script に push して、公開中のデプロイを更新する。
+# 必要な設定（GitHub の Settings > Secrets and variables > Actions）：
+#   Secrets   CLASPRC_JSON     … clasp login で作られる .clasprc.json の中身（Cutech アカウント）
+#   Variables L_DEPLOYMENT_ID  … Cutech Log のウェブアプリのデプロイID
+#             R_DEPLOYMENT_ID  … Cutech Records のウェブアプリのデプロイID
+# スクリプトIDは log/.clasp.json と records/.clasp.json から読む。
+# appsscript.json（公開範囲などの設定）は、Apps Script 上の今のものをそのまま使う（リポジトリでは管理しない）。
+name: Deploy to Apps Script
+
+on:
+  push:
+    branches: [main]
+    paths: ['log/**', 'records/**']
+  workflow_dispatch:   # Actions の画面から手動でも実行できる（L・R の両方を更新）
+
+concurrency:
+  group: deploy-gas
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: clasp を入れる
+        run: npm install -g @google/clasp@2.4.2
+
+      - name: ログイン情報を置く
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ]; then echo "Secret CLASPRC_JSON が設定されていません"; exit 1; fi
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+
+      - name: 変更のあったアプリを調べる
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "log=true" >> "$GITHUB_OUTPUT"; echo "records=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
+          echo "$files"
+          echo "log=$(echo "$files" | grep -q '^log/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "records=$(echo "$files" | grep -q '^records/' && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Cutech Log（L）を更新
+        if: steps.changed.outputs.log == 'true'
+        env:
+          DEPLOYMENT_ID: ${{ vars.L_DEPLOYMENT_ID }}
+        run: bash .github/scripts/deploy-gas.sh log "$DEPLOYMENT_ID"
+
+      - name: Cutech Records（R）を更新
+        if: steps.changed.outputs.records == 'true'
+        env:
+          DEPLOYMENT_ID: ${{ vars.R_DEPLOYMENT_ID }}
+        run: bash .github/scripts/deploy-gas.sh records "$DEPLOYMENT_ID"
+
+      - name: ログイン情報を消す
+        if: always()
+        run: rm -f ~/.clasprc.json
