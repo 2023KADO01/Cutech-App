@@ -469,7 +469,7 @@ function applyChanges(ch){
  snap=takeSnap();dirty=false;paintAuto();
 }
 function sync(){dirty=true;syncChain=syncChain.then(doSync)}
-const PUB={addRec:1,addName:1},OUTBOX='cutech-outbox';
+const PUB={addRec:1,addName:1,genScr:1},OUTBOX='cutech-outbox';   // ログインなしでできる操作（サーバーの PUBLIC_OPS と同じ）
 const unsentIds=new Set();
 let retryN=0,retryTimer=null;
 const unsentBadge=r=>unsentIds.has(r.id)?'<span class="bdg" style="background:#d33;color:#fff">未送信</span>':'';
