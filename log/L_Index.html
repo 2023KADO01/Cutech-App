@@ -111,6 +111,17 @@ button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active
 .scrmini:active{filter:var(--press);transform:scale(.98);transition-duration:0s}
 #fmcKb{display:none;background:var(--field);border:1px solid var(--line);border-radius:14px;padding:10px;gap:8px;grid-template-columns:repeat(5,minmax(0,1fr))}
 #fmcKb button{border:1px solid var(--line);background-color:var(--panel);color:var(--text);border-radius:12px;padding:17px 0;font:inherit;font-weight:800;font-size:1.3rem;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center}
+#fmcKb{position:relative}
+#fmcKb .seg{grid-column:1/-1;min-height:0;padding:3px}
+#fmcKb .seg button{border:0;border-radius:9px;padding:11px 0;font-size:1rem;background:transparent}
+#fmcKb .seg button.on{background:var(--accent);color:var(--on-accent)}
+#fmcKb .seg button:disabled{opacity:.35;cursor:not-allowed}
+#fmcKb .kbS{font-size:1rem}
+#fmcKb .kbW{grid-column:span 2}#fmcKb .kbW4{grid-column:span 4}
+#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% - 62px);z-index:5;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
+#fmcKb .kbMore button{padding:10px 0;font-size:1.2rem}
+#fmcKb button.on{background-color:var(--chip-active);border-color:var(--accent);color:var(--accent)}
+#attemptGrid input.kbOn,#attemptGrid textarea.kbOn{outline:2px solid var(--accent);outline-offset:0;background-image:linear-gradient(color-mix(in srgb,var(--accent) 10%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))}
 #fmcKb button:active{filter:brightness(.9)}
 #fmcKb button[data-act="del"]{touch-action:none}
 #fmcKb button svg{width:30px;height:30px}
@@ -1568,36 +1579,63 @@ $('scrModal').addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeScrModal();closeEdit();settleConfirm(false);settleImport(null)}});
 $('eventDate').addEventListener('change',updateScr);$('eventDate').addEventListener('input',updateScr);
 $('attemptGrid').addEventListener('focusin',()=>setTimeout(()=>guarded('scr',updateScr),0));$('attemptGrid').addEventListener('focusout',()=>setTimeout(()=>guarded('scr',updateScr),0));
-// ---- 専用キーボード（FMCの回転記号入力）----
+// ---- 専用キーボード（FMCの回転記号入力：解答欄・コメント欄の両方）----
 // 入力中の試技の枠のすぐ下（広い画面では右側）に表示する。標準のキーボードとも混ぜて使える
+const kbCoarse=()=>matchMedia('(pointer:coarse)').matches;
+let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t=解答 / c=コメント）、数字面、「…」の吹き出し
 (()=>{
  const grid=$('attemptGrid');
  const kb=document.createElement('div');kb.id='fmcKb';kb.setAttribute('role','group');kb.setAttribute('aria-label','回転記号キーボード');
- const K=(l,v,t,c)=>`<button type="button" data-k="${v}" data-t="${t}" class="${c?'c'+c:''}">${l}</button>`;
+ const K=(l,v,t,c,x)=>`<button type="button" data-k="${v}" data-t="${t}" class="${(c?'c'+c:'')+(x?' '+x:'')}">${String(l).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</button>`;
+ const C=(v,x)=>K(v,v,'c','',x);
  const DEL='<button type="button" data-act="del" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5H20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H8.5L2.5 12z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg></button>';
- kb.innerHTML=K('R','R','f','R')+K('U','U','f','U')+K('F','F','f','F')+K("'","'",'m')+DEL
-  +K('L','L','f','L')+K('D','D','f','D')+K('B','B','f','B')+K('2','2','m')+'<span></span>'
-  +K('x','x','f')+K('y','y','f')+K('z','z','f')+K('w','w','m');
- grid.appendChild(kb);
+ const ENT='<button type="button" data-k="\n" data-t="c" aria-label="改行"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6v6a2 2 0 0 1-2 2H5"/><path d="M9 10l-4 4 4 4"/></svg></button>';
+ const SP=w=>`<button type="button" data-k=" " data-t="c" class="${w}" aria-label="スペース"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v6h16v-6"/></svg></button>`;
+ const rot=()=>K('R','R','f','R')+K('U','U','f','U')+K('F','F','f','F')+K("'","'",'m')+DEL
+  +K('L','L','f','L')+K('D','D','f','D')+K('B','B','f','B')+K('2','2','m');
+ const MORE=['!','?','+','-','=','*','%','&','$','#','^','[',']','<','>']; // よく使いそうな順。カッコ類は隣同士
+ kbRender=()=>{
+  const mo=fmcMo[kbTarget],f=mo?'c':kbField,sig=[f,mo,kbNum,kbMore].join();
+  if(kb.dataset.sig===sig)return;kb.dataset.sig=sig;
+  let h=`<div class="seg" role="group" aria-label="入力先"><button type="button" data-f="t" class="${f==='t'?'on':''}"${mo?' disabled':''}>解答</button><button type="button" data-f="c" class="${f==='c'?'on':''}">コメント</button></div>`;
+  if(f==='t')h+=rot()+'<span></span>'+K('x','x','f')+K('y','y','f')+K('z','z','f')+K('w','w','m');
+  else{
+   const MR=`<button type="button" data-act="more" class="kbS${kbMore?' on':''}" aria-label="その他の記号" aria-expanded="${kbMore}">…</button>`;
+   if(!kbNum)h+=rot()+ENT+K('x','x','f')+K('y','y','f')+K('z','z','f')+K('w','w','m')+C('/')+'<button type="button" data-act="num" class="kbS">123</button>';
+   else h+=C('7')+C('8')+C('9')+C('+')+DEL+C('4')+C('5')+C('6')+C('-')+ENT+C('1')+C('2')+C('3')+C('0')+C('/')+'<button type="button" data-act="sym" class="kbS">RUF</button>';
+   h+=C('(')+C(')')+MR+SP('');
+  }
+  if(kbMore&&f==='c')h+='<div class="kbMore" role="group" aria-label="その他の記号">'+MORE.map(m=>C(m)).join('')+'</div>';
+  kb.innerHTML=h;
+ };
+ grid.appendChild(kb);kbRender();
  kb.addEventListener('mousedown',e=>e.preventDefault()); // クリックで入力欄からフォーカスが外れないようにする
- // 指で操作する端末では、キーを押すたびにフォーカスを外して標準キーボードを閉じる（カーソル位置は保持される）。PCではフォーカスを残す
- const settle=el=>{if(matchMedia('(pointer:coarse)').matches)el.blur();else el.focus({preventScroll:true})};
+ // 指で操作する端末でも入力欄のフォーカスは保つ（キャレットを見せるため）。inputmode="none" で標準キーボードだけ出さない。
+ // inputmode を切り替えたときは、iOS で反映させるため blur→focus し直す（キャレット位置は保持）
+ const settle=(el,p)=>{
+  if(!kbCoarse()){el.focus({preventScroll:true});return}
+  const changed=el.inputMode!=='none';
+  if(changed){el.inputMode='none';if(document.activeElement===el)el.blur()}
+  if(changed||document.activeElement!==el)el.focus({preventScroll:true});
+  el.setSelectionRange(p,p);
+ };
  const press=b=>{
   const n=curFormat().n;if(kbTarget>n)kbTarget=n;
-  const el=$('t'+kbTarget);if(!el||el.disabled)return;
+  const mo=fmcMo[kbTarget],fld=mo?'c':kbField,cm=fld==='c';
+  const el=$(fld+kbTarget);if(!el||el.disabled)return;
   const v=el.value,en=el.selectionEnd??v.length;let s=el.selectionStart??v.length,head,tail=v.slice(en);
   if(b.dataset.act==='del'){
-   if(s===en&&s>0){let a=s-1;if(v[a]===' '&&a>0)a--;s=a}
+   if(s===en&&s>0){let a=s-1;if(!cm&&v[a]===' '&&a>0)a--;s=a}
    head=v.slice(0,s);
   }else{
    const k=b.dataset.k,before=v.slice(0,s);head=before+k;
    if(b.dataset.t==='f'&&s===en){
     // 同じ回転記号を続けて押すと  U → U2 → U' → なし → U  と変わる
-    const m=/(^|\s)([URFDLBxyz])(2|')?$/.exec(before);
+    const m=(cm?/(^|[\s(])([URFDLBxyz])(2|')?$/:/(^|\s)([URFDLBxyz])(2|')?$/).exec(before);
     if(m&&m[2]===k){
      const start=s-m[2].length-(m[3]||'').length,suf=m[3]||'';
-     head=suf===''?before.slice(0,start)+k+'2':suf==='2'?before.slice(0,start)+k+"'":before.slice(0,start).replace(/\s+$/,'');
-    }else if(s>0&&v[s-1]!==' ')head=before+' '+k; // 面・持ち替えは前の手と空ける
+     head=suf===''?before.slice(0,start)+k+'2':suf==='2'?before.slice(0,start)+k+"'":before.slice(0,start).replace(cm?/ $/:/\s+$/,'');
+    }else if(s>0&&v[s-1]!==' '&&!(cm&&/[\s(]/.test(v[s-1])))head=before+' '+k; // 面・持ち替えは前の手と空ける（コメントでは「(」の直後は空けない）
    }else if(b.dataset.t==='m'&&s===en){
     // 2 ' w：同じキーをもう一度押すと消える。2 と ' は互いに上書きする
     const last=before.slice(-1);
@@ -1605,13 +1643,15 @@ $('attemptGrid').addEventListener('focusin',()=>setTimeout(()=>guarded('scr',upd
     else if((k==="'"||k==='2')&&(last==="'"||last==='2'))head=before.slice(0,-1)+k;
    }
   }
-  // 入力後も、カーソルは操作した場所に残す（空白は整形で変わることがあるので、空白以外の文字数で位置を合わせる）
+  if(cm&&(head+tail).length>(el.maxLength>0?el.maxLength:2000))return;
+  // 入力後も、カーソルは操作した場所に残す（解答は空白が整形で変わることがあるので、空白以外の文字数で位置を合わせる）
   const keep=head.replace(/\s/g,'').length;
   el.value=head+tail;
   el.dispatchEvent(new Event('input',{bubbles:true}));
   let c=0,q=0;const nv=el.value;
-  while(q<nv.length&&c<keep){if(!/\s/.test(nv[q]))c++;q++}
-  el.setSelectionRange(q,q);settle(el);
+  if(cm)q=Math.min(head.length,nv.length);
+  else while(q<nv.length&&c<keep){if(!/\s/.test(nv[q]))c++;q++}
+  el.setSelectionRange(q,q);settle(el,q);
  };
  // 削除キーは長押しで連続削除する（指を離す・外すと止まる）。ほかのキーは普通にタップで1回
  let holdT=0,holdI=0;
@@ -1624,18 +1664,45 @@ $('attemptGrid').addEventListener('focusin',()=>setTimeout(()=>guarded('scr',upd
  for(const ev of ['pointerup','pointercancel','pointerleave'])kb.addEventListener(ev,stopHold);
  kb.addEventListener('contextmenu',e=>e.preventDefault());
  kb.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.act==='del'&&e.detail!==0)return; // マウス・タッチ操作は pointerdown で処理済み（キーボード操作のEnter等だけここで処理）
+  const b=e.target.closest('button');if(!b||b.disabled)return;
+  if(b.dataset.f){ // 入力先（解答／コメント）の切り替え
+   kbField=b.dataset.f;kbMore=false;
+   const el=$(kbField+kbTarget);
+   syncKb(isFmc(eventValue()));
+   if(el){const p=el.selectionEnd??el.value.length;settle(el,p)}
+   return;
+  }
+  const a=b.dataset.act;
+  if(a==='num'||a==='sym'){kbNum=a==='num';kbRender();return}
+  if(a==='more'){kbMore=!kbMore;kbRender();return}
+  if(a==='del'&&e.detail!==0)return; // マウス・タッチ操作は pointerdown で処理済み（キーボード操作のEnter等だけここで処理）
   press(b);
  });
+ // コメント欄を直接タップしたときは、標準キーボード（日本語入力など）を使えるように inputmode を外す
+ let tapWas=null;
+ grid.addEventListener('pointerdown',e=>{
+  const el=e.target.closest&&e.target.closest('textarea[id^="c"]');
+  if(el&&kbCoarse()&&el.inputMode==='none'){tapWas=document.activeElement===el;el.removeAttribute('inputmode');el.inputMode=''}else tapWas=null;
+ },true);
+ grid.addEventListener('click',e=>{
+  const el=e.target.closest&&e.target.closest('textarea[id^="c"]');
+  if(el&&tapWas&&el.inputMode!=='none'){tapWas=null;const s=el.selectionStart,t=el.selectionEnd;el.blur();el.focus({preventScroll:true});el.setSelectionRange(s,t)} // すでにフォーカス中だと iOS は標準キーボードを出さないので、入れ直す
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&kbMore){kbMore=false;kbRender()}});
  window.addEventListener('resize',()=>syncKb(isFmc(eventValue())));
- grid.addEventListener('focusin',e=>{const m=/^t([1-5])$/.exec(e.target.id||'');if(m){kbTarget=Number(m[1]);guarded('kb',()=>syncKb(isFmc(eventValue())))}});
+ grid.addEventListener('focusin',e=>{const m=/^([tc])([1-5])$/.exec(e.target.id||'');if(m){kbTarget=Number(m[2]);kbField=m[1];guarded('kb',()=>syncKb(isFmc(eventValue())))}});
 })();
 function syncKb(fmc){
- const on=fmc&&!fmcMo[kbTarget],kb=$('fmcKb');if(!kb)return;
- kb.style.display=on?'grid':'none';
+ const kb=$('fmcKb');if(!kb)return;
  const n=curFormat().n;if(kbTarget>n)kbTarget=n;
  const box=$('t'+kbTarget).closest('.attempt');
+ // コメント欄が見えていればキーボードを出す（手数のみモードでもコメント用に出す）
+ const on=!!(fmc&&box&&box.style.display!=='none'&&$('c'+kbTarget).style.display!=='none');
+ if(fmcMo[kbTarget])kbField='c';
+ if(!on)kbMore=false;
+ kbRender();
+ kb.style.display=on?'grid':'none';
+ for(let i=1;i<=5;i++){$('t'+i).classList.toggle('kbOn',on&&i===kbTarget&&kbField==='t');$('c'+i).classList.toggle('kbOn',on&&i===kbTarget&&kbField==='c')} // 入力先の欄を強調
  if(box&&kb.previousElementSibling!==box)box.after(kb); // 入力中の枠のすぐ下へ
  kb.after($('fmcOk')); // 確定ボタン：縦配置ならキーボードの下、横配置（キーボードが右にある）ならコメント欄の下
  // 横幅が広い（PC・横画面）ときは枠の右側に置く
@@ -1676,7 +1743,7 @@ function applyEventLayout(){
   el.placeholder=mbld?'タイム':fmc?fmcPh(i):'';
   el.autocapitalize=fmc?'off':'characters';
   $('m'+i).style.display=(mbld&&show)?'flex':'none';
-  el.inputMode=fmc&&fmcMo[i]?'numeric':'text';
+  el.inputMode=fmc&&fmcMo[i]?'numeric':fmc&&kbCoarse()?'none':'text'; // FMCの解答欄は専用キーボードだけ（標準キーボードは出さない）
   $('p'+i).style.display=(fmc||mbld)?'none':'';$('d'+i).style.display=mbld?'none':'';
   if(!show||fmc||mbld)setPlus(i,false);if(!show||mbld)setDnf(i,'');
   if(!show)clearRow(i);
