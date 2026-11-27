@@ -15,16 +15,17 @@
 - どちらも Google スプレッドシートに紐づけ、データの保存・読込を行う。
 - スプレッドシートID、シート名、列構成などの具体値は、ユーザーに確認するか既存コードから読み取ること。推測で書かない。
 
-## リポジトリ構成（予定）
-
-リポジトリは現時点では空で、以下は**予定**であり確定ではない。
+## リポジトリ構成
 
 ```
-log/       # Cutech Log (L): 記録入力アプリ
-records/   # Cutech Records (R): 記録閲覧アプリ
+log/       # Cutech Log (L): 記録入力アプリ（L_Code.gs, L_Index.html, .clasp.json）
+records/   # Cutech Records (R): 記録閲覧アプリ（R_Code.gs, R_Index.html, .clasp.json）
+.github/workflows/deploy.yml   # main へのマージで Apps Script に自動で push・デプロイする
+.github/scripts/deploy-gas.sh  # 上のワークフローが使うスクリプト
 ```
 
-> 注記: 実際の構成ができたら、このセクションを更新すること。
+- appsscript.json はリポジトリで管理しない（デプロイ時に Apps Script 上のものを取ってきて使う）。
+- R のスプレッドシートIDは、R のスクリプト プロパティ SHEET_ID に設定する（コードには書かない）。
 
 ## 作業分担ルール（重要）
 
