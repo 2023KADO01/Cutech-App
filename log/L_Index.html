@@ -410,35 +410,6 @@ function diffOps(base){
 }
 const hasPending=()=>dirty&&!!snap&&diffOps(snap).ops.length>0;   // dirty＝sync()が呼ばれた（ローカルで変更した）ときだけ差分を計算する
 function recalcOne(r){try{const c=calc(r.attempts,r.event,recordFormat(r));r.best=c.best;r.worst=c.worst;r.average=c.average}catch{}}
-// ================= タップ診断（原因調査用）=================
-// ロゴ（Cutech …）を、3秒以内に5回続けてタップすると、画面の上に診断表示が出ます（もう一度5回タップで消えます）。
-// 指が触れた場所・クリックが届いた要素・画面の位置（スクロール量、表示領域）・画面のずれを記録します。
-const tapDiag=(()=>{
- let on=false,box=null,cnt=0,t0=0;const rows=[],vv=window.visualViewport;
- try{on=sessionStorage.getItem('tapDiag')==='1'}catch(e){}
- const d=el=>{if(!el||!el.tagName)return '(なし)';const c=(el.closest&&el.closest('button,a,input,textarea,select,label,summary,[data-rid]'))||el;return c.tagName.toLowerCase()+(c.id?'#'+c.id:'')+(typeof c.className==='string'&&c.className?'.'+c.className.split(' ')[0]:'')};
- const st=()=>`sy=${Math.round(scrollY)} dh=${document.documentElement.scrollHeight} ih=${innerHeight}`+(vv?` vv[top=${Math.round(vv.offsetTop)} h=${Math.round(vv.height)} s=${vv.scale.toFixed(2)}]`:'');
- const draw=()=>{
-  if(!box){box=document.createElement('pre');box.style.cssText='position:fixed;left:0;right:0;top:0;z-index:2147483647;margin:0;padding:4px 6px;font:10px/1.35 ui-monospace,Menlo,monospace;background:rgba(0,0,0,.8);color:#9f9;pointer-events:none;white-space:pre-wrap;word-break:break-all;max-height:46vh;overflow:hidden';(document.body||document.documentElement).appendChild(box)}
-  box.textContent='【タップ診断】ロゴを5回タップで終了\n'+rows.join('\n');
- };
- const log=s=>{if(!on)return;rows.push((performance.now()/1000).toFixed(2)+' '+s);if(rows.length>16)rows.shift();draw()};
- const set=v=>{on=v;try{sessionStorage.setItem('tapDiag',v?'1':'0')}catch(e){}if(!v&&box){box.remove();box=null;rows.length=0}else if(v){log('診断開始 '+st())}};
- const rect=el=>{try{const c=el.closest('button,a,input,textarea,select,label,summary,[data-rid]')||el,r=c.getBoundingClientRect();return ` r=[${Math.round(r.top)}-${Math.round(r.bottom)}]`}catch(x){return ''}};
- document.addEventListener('pointerdown',e=>log(`DOWN  ${d(e.target)} (${Math.round(e.clientX)},${Math.round(e.clientY)})${rect(e.target)} scrOff=${Math.round(e.screenY-e.clientY)} ${st()}`),true);
- document.addEventListener('click',e=>{
-  if(e.target.closest&&e.target.closest('.brandwrap')){const n=performance.now();cnt=(n-t0<3000)?cnt+1:1;t0=n;if(cnt>=5){cnt=0;set(!on);return}}
-  log(`CLICK ${d(e.target)} (${Math.round(e.clientX)},${Math.round(e.clientY)})${e.isTrusted?'':' [補正で再送]'}`);
- },true);
- document.addEventListener('focusin',e=>log(`focus ${d(e.target)} ${st()}`),true);
- document.addEventListener('focusout',e=>log(`blur  ${d(e.target)}`),true);
- addEventListener('resize',()=>log('resize '+st()));
- if(vv){vv.addEventListener('resize',()=>log('vv.resize '+st()))}
- let lastSy=0,lastAt=0;addEventListener('scroll',()=>{if(!on)return;const n=performance.now();if(Math.abs(scrollY-lastSy)<40||n-lastAt<150)return;lastSy=scrollY;lastAt=n;log('scroll '+st())},{passive:true});
- try{new PerformanceObserver(l=>{for(const x of l.getEntries()){if(x.hadRecentInput&&false)continue;const s=(x.sources&&x.sources[0]);log(`SHIFT ${x.value.toFixed(3)}${s?' '+d(s.node)+' '+Math.round(s.previousRect.y)+'→'+Math.round(s.currentRect.y):''}`)}}).observe({type:'layout-shift',buffered:false})}catch(e){}
- if(on)setTimeout(()=>log('診断中 '+st()),500);
- return {set};
-})();
 // ================= 押している間は画面を動かさない =================
 // 指（マウス）を押している間と、離した直後（クリックの処理が終わるまで）は、自動の描き換えを待たせる。
 // 押した瞬間に画面の高さが変わって、別のボタンが指の下に来てしまうのを防ぐ。キーボード操作のときは待たせない。

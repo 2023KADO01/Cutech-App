@@ -22,6 +22,9 @@ log/       # Cutech Log (L): 記録入力アプリ（L_Code.gs, L_Index.html, .c
 records/   # Cutech Records (R): 記録閲覧アプリ（R_Code.gs, R_Index.html, .clasp.json）
 .github/workflows/deploy.yml   # main へのマージで Apps Script に自動で push・デプロイする
 .github/scripts/deploy-gas.sh  # 上のワークフローが使うスクリプト
+.github/workflows/update-cubing.yml  # cubing.js（スクランブル生成）の配布元を毎週確認し、変わっていれば更新PRを作る
+.github/scripts/fetch-cubing.mjs     # 上のワークフローが使うスクリプト
+vendor/cubing/                 # cubing.js の固定コピー（README.md 参照）
 ```
 
 - appsscript.json はリポジトリで管理しない（デプロイ時に Apps Script 上のものを取ってきて使う）。
