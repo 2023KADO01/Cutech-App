@@ -118,8 +118,8 @@ button:not(:disabled):active,a:active,.btn:not(:disabled):active,.att-btn:active
 #fmcKb .seg button:disabled{opacity:.35;cursor:not-allowed}
 #fmcKb .kbS{font-size:1rem}
 #fmcKb .kbW{grid-column:span 2}#fmcKb .kbW4{grid-column:span 4}
-#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:5;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
-#fmcKb .kbMore button{padding:13px 0;font-size:1.2rem}
+#fmcKb .kbMore{position:absolute;left:0;right:0;bottom:calc(100% - 62px);z-index:5;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:8px;background:var(--panel);border:1px solid var(--field-line);border-radius:14px;box-shadow:var(--shadow)}
+#fmcKb .kbMore button{padding:10px 0;font-size:1.2rem}
 #fmcKb button.on{background-color:var(--chip-active);border-color:var(--accent);color:var(--accent)}
 #attemptGrid input.kbOn,#attemptGrid textarea.kbOn{outline:2px solid var(--accent);outline-offset:0;background-image:linear-gradient(color-mix(in srgb,var(--accent) 10%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))}
 #fmcKb button:active{filter:brightness(.9)}
@@ -1581,6 +1581,7 @@ $('eventDate').addEventListener('change',updateScr);$('eventDate').addEventListe
 $('attemptGrid').addEventListener('focusin',()=>setTimeout(()=>guarded('scr',updateScr),0));$('attemptGrid').addEventListener('focusout',()=>setTimeout(()=>guarded('scr',updateScr),0));
 // ---- 専用キーボード（FMCの回転記号入力：解答欄・コメント欄の両方）----
 // 入力中の試技の枠のすぐ下（広い画面では右側）に表示する。標準のキーボードとも混ぜて使える
+const kbCoarse=()=>matchMedia('(pointer:coarse)').matches;
 let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t=解答 / c=コメント）、数字面、「…」の吹き出し
 (()=>{
  const grid=$('attemptGrid');
@@ -1588,6 +1589,7 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
  const K=(l,v,t,c,x)=>`<button type="button" data-k="${v}" data-t="${t}" class="${(c?'c'+c:'')+(x?' '+x:'')}">${l}</button>`;
  const C=(v,x)=>K(v,v,'c','',x);
  const DEL='<button type="button" data-act="del" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5H20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H8.5L2.5 12z"/><path d="M12.5 9.5l5 5M17.5 9.5l-5 5"/></svg></button>';
+ const ENT='<button type="button" data-k="\n" data-t="c" aria-label="改行"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6v6a2 2 0 0 1-2 2H5"/><path d="M9 10l-4 4 4 4"/></svg></button>';
  const SP=w=>`<button type="button" data-k=" " data-t="c" class="${w}" aria-label="スペース"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v6h16v-6"/></svg></button>`;
  const rot=()=>K('R','R','f','R')+K('U','U','f','U')+K('F','F','f','F')+K("'","'",'m')+DEL
   +K('L','L','f','L')+K('D','D','f','D')+K('B','B','f','B')+K('2','2','m');
@@ -1597,18 +1599,26 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
   if(kb.dataset.sig===sig)return;kb.dataset.sig=sig;
   let h=`<div class="seg" role="group" aria-label="入力先"><button type="button" data-f="t" class="${f==='t'?'on':''}"${mo?' disabled':''}>解答</button><button type="button" data-f="c" class="${f==='c'?'on':''}">コメント</button></div>`;
   if(f==='t')h+=rot()+'<span></span>'+K('x','x','f')+K('y','y','f')+K('z','z','f')+K('w','w','m');
-  else if(!kbNum)h+=rot()+K('w','w','m')+K('x','x','f')+K('y','y','f')+K('z','z','f')+C('(')+C(')')
-   +'<button type="button" data-act="num" class="kbS">123</button>'+C('/')+`<button type="button" data-act="more" class="kbS${kbMore?' on':''}" aria-label="その他の記号" aria-expanded="${kbMore}">…</button>`+SP('kbW');
-  else h+=C('1')+C('2')+C('3')+C('/')+DEL+C('4')+C('5')+C('6')+C('(')+C(')')+C('7')+C('8')+C('9')+C('0')
-   +`<button type="button" data-act="more" class="kbS${kbMore?' on':''}" aria-label="その他の記号" aria-expanded="${kbMore}">…</button>`
-   +'<button type="button" data-act="sym" class="kbS">RUF</button>'+SP('kbW4');
+  else{
+   const MR=`<button type="button" data-act="more" class="kbS${kbMore?' on':''}" aria-label="その他の記号" aria-expanded="${kbMore}">…</button>`;
+   if(!kbNum)h+=rot()+ENT+K('x','x','f')+K('y','y','f')+K('z','z','f')+K('w','w','m')+C('/')+'<button type="button" data-act="num" class="kbS">123</button>';
+   else h+=C('7')+C('8')+C('9')+C('+')+DEL+C('4')+C('5')+C('6')+C('-')+ENT+C('1')+C('2')+C('3')+C('0')+C('/')+'<button type="button" data-act="sym" class="kbS">RUF</button>';
+   h+=C('(')+C(')')+MR+SP('');
+  }
   if(kbMore&&f==='c')h+='<div class="kbMore" role="group" aria-label="その他の記号">'+MORE.map(m=>C(m)).join('')+'</div>';
   kb.innerHTML=h;
  };
  grid.appendChild(kb);kbRender();
  kb.addEventListener('mousedown',e=>e.preventDefault()); // クリックで入力欄からフォーカスが外れないようにする
- // 指で操作する端末では、キーを押すたびにフォーカスを外して標準キーボードを閉じる（カーソル位置は保持される）。PCではフォーカスを残す
- const settle=el=>{if(matchMedia('(pointer:coarse)').matches)el.blur();else el.focus({preventScroll:true})};
+ // 指で操作する端末でも入力欄のフォーカスは保つ（キャレットを見せるため）。inputmode="none" で標準キーボードだけ出さない。
+ // inputmode を切り替えたときは、iOS で反映させるため blur→focus し直す（キャレット位置は保持）
+ const settle=(el,p)=>{
+  if(!kbCoarse()){el.focus({preventScroll:true});return}
+  const changed=el.inputMode!=='none';
+  if(changed){el.inputMode='none';if(document.activeElement===el)el.blur()}
+  if(changed||document.activeElement!==el)el.focus({preventScroll:true});
+  el.setSelectionRange(p,p);
+ };
  const press=b=>{
   const n=curFormat().n;if(kbTarget>n)kbTarget=n;
   const mo=fmcMo[kbTarget],fld=mo?'c':kbField,cm=fld==='c';
@@ -1641,8 +1651,7 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
   let c=0,q=0;const nv=el.value;
   if(cm)q=Math.min(head.length,nv.length);
   else while(q<nv.length&&c<keep){if(!/\s/.test(nv[q]))c++;q++}
-  el.setSelectionRange(q,q);settle(el);
-  if(kbMore){kbMore=false;kbRender()}
+  el.setSelectionRange(q,q);settle(el,q);
  };
  // 削除キーは長押しで連続削除する（指を離す・外すと止まる）。ほかのキーは普通にタップで1回
  let holdT=0,holdI=0;
@@ -1659,17 +1668,26 @@ let kbField='t',kbNum=false,kbMore=false,kbRender=()=>{}; // 入力先の欄（t
   if(b.dataset.f){ // 入力先（解答／コメント）の切り替え
    kbField=b.dataset.f;kbMore=false;
    const el=$(kbField+kbTarget);
-   if(matchMedia('(pointer:coarse)').matches){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
-   else if(el)el.focus({preventScroll:true});
-   syncKb(isFmc(eventValue()));return;
+   syncKb(isFmc(eventValue()));
+   if(el){const p=el.selectionEnd??el.value.length;settle(el,p)}
+   return;
   }
   const a=b.dataset.act;
-  if(a==='num'||a==='sym'){kbNum=a==='num';kbMore=false;kbRender();return}
+  if(a==='num'||a==='sym'){kbNum=a==='num';kbRender();return}
   if(a==='more'){kbMore=!kbMore;kbRender();return}
   if(a==='del'&&e.detail!==0)return; // マウス・タッチ操作は pointerdown で処理済み（キーボード操作のEnter等だけここで処理）
   press(b);
  });
- document.addEventListener('pointerdown',e=>{if(kbMore&&!e.target.closest('#fmcKb [data-act="more"],#fmcKb .kbMore')){kbMore=false;kbRender()}},true);
+ // コメント欄を直接タップしたときは、標準キーボード（日本語入力など）を使えるように inputmode を外す
+ let tapWas=null;
+ grid.addEventListener('pointerdown',e=>{
+  const el=e.target.closest&&e.target.closest('textarea[id^="c"]');
+  if(el&&kbCoarse()&&el.inputMode==='none'){tapWas=document.activeElement===el;el.removeAttribute('inputmode');el.inputMode=''}else tapWas=null;
+ },true);
+ grid.addEventListener('click',e=>{
+  const el=e.target.closest&&e.target.closest('textarea[id^="c"]');
+  if(el&&tapWas&&el.inputMode!=='none'){tapWas=null;const s=el.selectionStart,t=el.selectionEnd;el.blur();el.focus({preventScroll:true});el.setSelectionRange(s,t)} // すでにフォーカス中だと iOS は標準キーボードを出さないので、入れ直す
+ });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&kbMore){kbMore=false;kbRender()}});
  window.addEventListener('resize',()=>syncKb(isFmc(eventValue())));
  grid.addEventListener('focusin',e=>{const m=/^([tc])([1-5])$/.exec(e.target.id||'');if(m){kbTarget=Number(m[2]);kbField=m[1];guarded('kb',()=>syncKb(isFmc(eventValue())))}});
@@ -1725,7 +1743,7 @@ function applyEventLayout(){
   el.placeholder=mbld?'タイム':fmc?fmcPh(i):'';
   el.autocapitalize=fmc?'off':'characters';
   $('m'+i).style.display=(mbld&&show)?'flex':'none';
-  el.inputMode=fmc&&fmcMo[i]?'numeric':'text';
+  el.inputMode=fmc&&fmcMo[i]?'numeric':fmc&&kbCoarse()?'none':'text'; // FMCの解答欄は専用キーボードだけ（標準キーボードは出さない）
   $('p'+i).style.display=(fmc||mbld)?'none':'';$('d'+i).style.display=mbld?'none':'';
   if(!show||fmc||mbld)setPlus(i,false);if(!show||mbld)setDnf(i,'');
   if(!show)clearRow(i);
