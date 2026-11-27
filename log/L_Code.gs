@@ -17,15 +17,15 @@ const SHEETS = {
 const BUILTIN_EVENTS = ['3x3x3 Cube', '2x2x2 Cube', '4x4x4 Cube', '5x5x5 Cube', '6x6x6 Cube', '7x7x7 Cube', '3x3x3 Blindfolded', '3x3x3 Fewest Moves', '3x3x3 One-Handed', 'Clock', 'Megaminx', 'Pyraminx', 'Skewb', 'Square-1', '4x4x4 Blindfolded', '5x5x5 Blindfolded', '3x3x3 Multi-Blind', 'Face Turning Octahedron'];
 const PUBLIC_OPS = { addRec: 1, addName: 1, genScr: 1 };   // ログイン不要の操作（genScr＝その日の、まだ無いスクランブルの生成・保存）
 const APP_TZ = 'Asia/Tokyo';                      // 「その日」の判定に使うタイムゾーン
-const PUBLIC_LIMIT_PER_MIN = 120;                // 公開書き込みの連投制限（全体）
+const PUBLIC_LIMIT_PER_MIN = 300;                // 公開書き込みの連投制限（全体・毎分）
+const PUBLIC_LIMIT_PER_DEV = 30;                 // 公開書き込みの連投制限（端末ごと・毎分・操作数。端末IDが不正・なしの端末は全員で共有）
 const MAX_RECORDS = 50000;
 
 // 管理者ログインの保護
 const DEVICE_MAX_FAILS = 5;       // 端末ごと：5回失敗で
 const DEVICE_LOCK_SEC = 3600;     //   その端末を1時間ロック
-const GLOBAL_MAX_FAILS = 100;     // 全体：10分間に100回失敗で
-const GLOBAL_WINDOW_SEC = 600;    //   （10分ごとに集計）
-const GLOBAL_LOCK_SEC = 600;      //   全員を10分ロック
+const GLOBAL_MAX_FAILS = 100;     // 全体：10分間に100回を超えて失敗している間は、
+const GLOBAL_WINDOW_SEC = 600;    //   （10分ごとに集計）失敗の応答を3秒遅らせる（全員のロックはしない）
 const SESSION_SEC = 21600;        // ログイン保持の上限（6時間：CacheServiceの上限）
 
 // 差分読み込み
@@ -37,8 +37,7 @@ function doGet() {
   return HtmlService.createHtmlOutputFromFile('L_Index')
     .setTitle('Cutech Log')
     .setFaviconUrl('https://2023kado01.github.io/cutech-icon/cutechicon.png')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, interactive-widget=resizes-content')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, interactive-widget=resizes-content');
 }
 
 /* ---------- シート入出力 ---------- */
@@ -184,7 +183,6 @@ function fullResult_() {
 /* ---------- ログイン ---------- */
 function login(id, pw, dev) {
   const c = CacheService.getScriptCache();
-  if (c.get('gl')) return { ok: false, msg: 'ログインの失敗が多発したため、全員のログインを一時停止しています。10分ほど待ってください。' };
   const d = devKey_(dev);
   if (c.get('ld_' + d)) return { ok: false, msg: 'この端末は、ログインに5回失敗したため、1時間ログインできません。' };
   if (credOk_(id, pw)) {
@@ -193,8 +191,7 @@ function login(id, pw, dev) {
     c.put('tk_' + token, '1', SESSION_SEC);
     return { ok: true, token: token };
   }
-  recordFail_(d);
-  if (c.get('gl')) return { ok: false, msg: 'ログインの失敗が多発したため、全員のログインを一時停止しています。10分ほど待ってください。' };
+  if (recordFail_(d) > GLOBAL_MAX_FAILS) Utilities.sleep(3000);   // 全体の失敗が多いときは応答を遅らせる（総当たり対策）
   if (c.get('ld_' + d)) return { ok: false, msg: 'ログインに5回失敗したため、この端末は1時間ログインできません。' };
   const left = DEVICE_MAX_FAILS - Number(c.get('fd_' + d) || 0);
   return { ok: false, msg: 'IDまたはパスワードが違います。（あと' + left + '回失敗すると、この端末は1時間ログインできません）' };
@@ -208,10 +205,11 @@ function logout(token) {
 /* ---------- 書き込み ---------- */
 function apply(ops, auth, dev) {
   if (!Array.isArray(ops) || ops.length > 20000) return { error: '不正なリクエストです' };
+  let tag = null;   // 端末タグ（addRec があるときだけ作る）
   const needAdmin = ops.some(o => !o || !PUBLIC_OPS[o.t]);
   if (needAdmin) {
     if (!sessionOk_(auth)) return { error: '管理者のログインが切れました。ログインし直してください。', authError: true };
-  } else if (!rateOk_(ops.length)) {
+  } else if (!rateOk_(ops.length, dev)) {
     return { error: '短時間に操作が集中しています。少し待ってからやり直してください。' };
   }
 
@@ -266,6 +264,7 @@ function apply(ops, auth, dev) {
           if (recIds.has(r.id)) { savedNames.add(r.name.trim()); break; }   // 再送で既に保存済み（エラーにしない）
           if (recIds.size >= MAX_RECORDS) { rej(o, r.id, 'limit', '保存できる記録数の上限に達しています'); break; }
           savedNames.add(r.name.trim());
+          r.by = tag || (tag = devTag_(dev));   // 送信元の端末（画面から来た by は無視して上書き）
           newRows.push([r.id, r.date, r.event, r.name, JSON.stringify(r)]);
           recIds.add(r.id); log.push(['records', 'put', r.id, JSON.stringify(r)]);
           break;
@@ -448,6 +447,7 @@ function cleanRec_(r) {
     if (typeof v !== 'string' || v.length > 40) return null;
     o[k] = v;
   }
+  if (r.by !== undefined) { if (typeof r.by !== 'string' || !/^[0-9a-f]{12}$/.test(r.by)) return null; o.by = r.by; }   // 送信元の端末タグ（既存の記録にはない）
   return o;
 }
 function cleanScr_(s) {
@@ -585,11 +585,11 @@ function recordFail_(d) {
   const n = Number(c.get('fd_' + d) || 0) + 1;
   if (n >= DEVICE_MAX_FAILS) { c.put('ld_' + d, '1', DEVICE_LOCK_SEC); c.put('fd_' + d, String(n), DEVICE_LOCK_SEC); }
   else c.put('fd_' + d, String(n), DEVICE_LOCK_SEC);
-  // 全体：10分間（10分ごとの集計）に100回失敗で全員を10分ロック
+  // 全体：10分間（10分ごとの集計）の失敗数を数えて返す
   const k = 'gf' + Math.floor(Date.now() / (GLOBAL_WINDOW_SEC * 1000));
   const g = Number(c.get(k) || 0) + 1;
   c.put(k, String(g), GLOBAL_WINDOW_SEC * 2);
-  if (g >= GLOBAL_MAX_FAILS) c.put('gl', '1', GLOBAL_LOCK_SEC);
+  return g;
 }
 function sessionOk_(a) {
   if (!a || typeof a.token !== 'string' || !/^\w{32,128}$/.test(a.token)) return false;
@@ -601,13 +601,22 @@ function eq_(a, b) {
   for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return r === 0 ? 1 : 0;
 }
-function rateOk_(n) {
+function rateOk_(n, dev) {
   const c = CacheService.getScriptCache();
-  const k = 'rl' + Math.floor(Date.now() / 60000);
-  const v = Number(c.get(k) || 0) + n;
-  if (v > PUBLIC_LIMIT_PER_MIN) return false;
-  c.put(k, String(v), 120);
+  const m = Math.floor(Date.now() / 60000);
+  const kd = 'rd_' + devKey_(dev) + '_' + m, kg = 'rl' + m;   // 端末ごと・全体
+  const vd = Number(c.get(kd) || 0) + n, vg = Number(c.get(kg) || 0) + n;
+  if (vd > PUBLIC_LIMIT_PER_DEV || vg > PUBLIC_LIMIT_PER_MIN) return false;   // 超えたら、どちらも加算しない
+  c.put(kd, String(vd), 120); c.put(kg, String(vg), 120);
   return true;
+}
+// 送信元の端末タグ（端末IDのハッシュの先頭12文字）。端末ID自体は記録に残さない（Rから誰でも記録を読めるため）
+function devTag_(dev) {
+  const p = props_();
+  let salt = p.getProperty('DEV_SALT');
+  if (!salt) { salt = Utilities.getUuid() + Utilities.getUuid(); p.setProperty('DEV_SALT', salt); }
+  const h = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + devKey_(dev));
+  return h.map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('').slice(0, 12);
 }
 
 /* ---------- バックアップ ---------- */
