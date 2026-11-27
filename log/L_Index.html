@@ -326,7 +326,7 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
    <div class="dg" id="rfFromBox" style="display:none"><label>開始日</label><div class="dgrow"><select id="rfFromY" aria-label="年"></select><select id="rfFromM" aria-label="月"></select><select id="rfFromD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfFrom" aria-label="カレンダーで選ぶ"></label></div></div>
    <div class="dg" id="rfToBox" style="display:none"><label>終了日</label><div class="dgrow"><select id="rfToY" aria-label="年"></select><select id="rfToM" aria-label="月"></select><select id="rfToD" aria-label="日"></select><label class="calbtn" title="カレンダーで選ぶ">📅<input type="date" id="rfTo" aria-label="カレンダーで選ぶ"></label></div></div>
   </div>
-  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span><button class="btn danger sm admin-only" type="button" id="bulkDelRec" disabled style="margin-left:auto">選択した記録を一括削除</button></div>
+  <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="rfClear">絞り込みをクリア</button><span class="muted" id="rfCount"></span><button class="btn secondary sm admin-only" type="button" id="selSameDev" disabled style="margin-left:auto">同じ端末の記録をすべて選択</button><button class="btn danger sm admin-only" type="button" id="bulkDelRec" disabled style="margin-left:8px">選択した記録を一括削除</button></div>
  <div class="table-wrap"><table><thead><tr><th class="admin-only"><input type="checkbox" id="selAllRec" aria-label="表示中の記録をすべて選択"></th><th>競技日</th><th>種目</th><th>競技者</th><th>形式</th><th>1回目</th><th>2回目</th><th>3回目</th><th>4回目</th><th>5回目</th><th>ベスト</th><th>ワースト</th><th>平均</th><th></th></tr></thead><tbody id="recordRows"></tbody></table><div class="empty" id="empty">記録はまだありません。</div></div>
 </section>
 <div id="recMoreRow" class="row" style="display:none;justify-content:center;margin:12px 0"><button class="btn secondary" type="button" id="recMore">もっと見る</button></div>
@@ -385,7 +385,7 @@ let curPg='main',curPlayer='',isAdmin=false,adminAuth=null,snap=null,rev=null,di
 let records=[];
 let dataLoaded=false;
 const J=JSON.stringify,TOK='cutech-admin-token';
-const selRec=new Set(),selScr=new Set();
+const selRec=new Set(),selScr=new Set();let selWide=false;   // 「同じ端末の記録をすべて選択」で、表示外の記録も選んでいる間 true（絞り込みを変えると解除）
 const DEV=(()=>{let id=null;try{id=localStorage.getItem('cutech-dev')}catch{}
  if(!id)try{id=sessionStorage.getItem('cutech-dev')}catch{}
  if(!id){id=((window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^\w-]/g,'');
@@ -608,7 +608,7 @@ function setAdmin(on,auth){
  try{if(on)sessionStorage.setItem(TOK,auth.token);else sessionStorage.removeItem(TOK)}catch{}
  document.body.classList.toggle('is-admin',on);
  $('adminBtn').textContent=on?'ログアウト':'管理者';
- if(!on){selRec.clear();selScr.clear();if(editingScrId)setScrEdit(null);try{setExMode(false)}catch{}}
+ if(!on){selRec.clear();selWide=false;selScr.clear();if(editingScrId)setScrEdit(null);try{setExMode(false)}catch{}}
  try{route(true);render();renderNames();renderSaved()}catch{}
 }
 async function restoreSession(){
@@ -1807,12 +1807,12 @@ function renderRecords(){
   .sort((a,b)=>b.date.localeCompare(a.date)||(a.createdAt&&b.createdAt?String(b.createdAt).localeCompare(String(a.createdAt)):0)||ord.get(a.id)-ord.get(b.id));
  $('empty').textContent=!dataLoaded?'記録を読み込み中…':records.length?'条件に合う記録がありません。':'記録はまだありません。';
  $('empty').style.display=list.length?'none':'block';
- const sig=J([range,from,to,g.y,g.m,g.d,ev,q]);if(sig!==recSig){recSig=sig;recLimit=REC_PAGE}
+ const sig=J([range,from,to,g.y,g.m,g.d,ev,q]);if(sig!==recSig){recSig=sig;recLimit=REC_PAGE;selWide=false}
  const shown=list.slice(0,recLimit);
  $('rfCount').textContent=dataLoaded?`${list.length}件`+(list.length!==records.length?`（全${records.length}件）`:'')+(list.length>shown.length?`　${shown.length}件を表示中`:''):'';
  $('recMoreRow').style.display=list.length>shown.length?'flex':'none';
  $('recMore').textContent=`もっと見る（残り${list.length-shown.length}件）`;
- {const vis=new Set(shown.map(r=>r.id));for(const id of [...selRec])if(!vis.has(id))selRec.delete(id);lastRecList=shown}
+ {const vis=new Set(shown.map(r=>r.id));if(!selWide)for(const id of [...selRec])if(!vis.has(id))selRec.delete(id);lastRecList=shown}
  $('recordRows').innerHTML=shown.map(r=>`<tr><td class="admin-only"><input type="checkbox" data-rsel="${esc(r.id)}"${selRec.has(r.id)?' checked':''} aria-label="選択"></td><td>${esc(r.date)}</td><td>${evShort(r.event)}</td><td>${esc(r.name)}${unsentBadge(r)}</td><td>${esc(fLabel(recordFormat(r)))}</td>${[0,1,2,3,4].map(k=>{const a=r.attempts[k];return `<td>${a?`<button type="button" class="att-btn" data-rid="${esc(r.id)}" data-ai="${k}">${attHtml(r,k)}</button>`:'—'}</td>`}).join('')}<td><strong>${mbStack(r.best)}</strong>${badgeHtml(r,'s')}</td><td>${esc(r.worst)}</td><td><strong>${esc(showAvg(r))}</strong>${badgeHtml(r,'a')}</td><td style="white-space:nowrap"><button class="btn secondary admin-only" data-edit="${esc(r.id)}" style="padding:6px 9px;margin-right:6px">編集</button><button class="btn secondary admin-only" data-del="${esc(r.id)}" style="padding:6px 9px">削除</button></td></tr>`).join('');
  updateRecBulk();
 }
@@ -1871,18 +1871,24 @@ $('recordRows').addEventListener('click',async e=>{const ab=e.target.closest('.a
 $('recMore').addEventListener('click',()=>{recLimit+=REC_PAGE;renderRecords()});
 function updateRecBulk(){
  const n=selRec.size;$('bulkDelRec').disabled=!n;
- $('bulkDelRec').textContent=n?`選択した記録を一括削除（${n}件）`:'選択した記録を一括削除';
+ $('bulkDelRec').textContent=n?`選択した記録を一括削除（${n}件${selWide?'・表示外を含む':''}）`:'選択した記録を一括削除';
+ $('selSameDev').disabled=!records.some(r=>r.by&&selRec.has(r.id));
  $('selAllRec').checked=lastRecList.length>0&&lastRecList.every(r=>selRec.has(r.id));
 }
 $('recordRows').addEventListener('change',e=>{const id=e.target.dataset&&e.target.dataset.rsel;if(!id)return;if(e.target.checked)selRec.add(id);else selRec.delete(id);updateRecBulk()});
 $('selAllRec').addEventListener('change',e=>{for(const r of lastRecList){if(e.target.checked)selRec.add(r.id);else selRec.delete(r.id)}renderRecords()});
+$('selSameDev').addEventListener('click',()=>{   // 選択中の記録と同じ端末（by）の記録を、表示外も含めて全件選ぶ
+ const bys=new Set(records.filter(r=>r.by&&selRec.has(r.id)).map(r=>r.by));if(!bys.size)return;
+ for(const r of records)if(bys.has(r.by))selRec.add(r.id);
+ selWide=true;renderRecords();
+});
 $('bulkDelRec').addEventListener('click',async()=>{
  const n=selRec.size;if(!n||pendingSubmit)return;
  pendingSubmit=true;
  const ok=await showConfirm(`選択した${n}件の記録を削除しますか？`,'この操作は取り消せません。','削除する','削除しない',true);
  pendingSubmit=false;
  if(!ok)return;
- records=records.filter(r=>!selRec.has(r.id));selRec.clear();save();render();
+ records=records.filter(r=>!selRec.has(r.id));selRec.clear();selWide=false;save();render();
 });
 // ---- bulk rename of competitor names (admin) ----
 const rnSel=new Set();

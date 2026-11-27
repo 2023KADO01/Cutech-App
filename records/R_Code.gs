@@ -27,8 +27,7 @@ function doGet() {
   return HtmlService.createHtmlOutputFromFile('R_Index')
     .setTitle('Cutech Records')
     .setFaviconUrl('https://2023kado01.github.io/cutech-icon/cutechicon.png')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, interactive-widget=resizes-content')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, interactive-widget=resizes-content');
 }
 
 /* ---------- 読み取り ---------- */
