@@ -1247,12 +1247,12 @@ function titleCube(k){
  <path d="M${pt(P.ul)}L${pt(P.c)}L${pt(P.ur)}M${pt(P.c)}L${pt(P.b)}" fill="none" stroke="var(--${k}-edge)" stroke-opacity=".55" stroke-width="1" stroke-linejoin="round"/></svg>`;
 }
 
-// ================= メンバー称号（金バッジの数で決まる） =================
+// ================= メンバー称号（黄金の証の数で決まる） =================
 let _cubeUid=0;
 const TTIERS=[{k:'bronze',name:'ブロンズメンバー',n:1},{k:'silver',name:'シルバーメンバー',n:2},{k:'gold',name:'ゴールドメンバー',n:3},{k:'platinum',name:'プラチナメンバー',n:4},{k:'opal',name:'オパールメンバー',n:5}];
 const TCHECK='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>';
 const TPBQ_N={bld1:1,bld2:2,bld3:3,fmc:1,fmcbld:2};
-// 金バッジが取れる5種類（CR・全種目・優勝・PBQ・教養）。条件の文は設定（BDGCFG）から作り、オフや金の段階がないものは含めない
+// 黄金の証になる5種類（CR・全種目・優勝・PBQ・教養）。条件の文は設定（BDGCFG）から作り、オフや金の段階がないものは含めない
 function titleCats(){
  const C=bdgConf(),out=[],gold=k=>(C[k].stages||[]).filter(s=>s.tier==='gold').sort((a,b)=>a.min-b.min)[0];
  if(C.cr.on)out.push({svg:'record_holder_gold',nm:C.cr.name,cond:bdgTpl(C.cr.desc,{n:1})});
@@ -1267,13 +1267,13 @@ function titleOf(name){
  return owned.size?{n:owned.size,t:TTIERS[Math.min(owned.size,TTIERS.length)-1],owned}:null;
 }
 const titleVars=t=>`--tedge:var(--${t.k}-edge);--ttext:var(--${t.k}-text)`;
-function titleChip(ti,tot){return `<button type="button" class="tchip${ti.t.k==='opal'?' opal-anim':''}" style="${titleVars(ti.t)}" aria-label="${ti.t.name}（金バッジ ${ti.n}/${tot}）">${titleCube(ti.t.k)}<span class="tn">${ti.t.name}</span></button>`}
+function titleChip(ti,tot){return `<button type="button" class="tchip${ti.t.k==='opal'?' opal-anim':''}" style="${titleVars(ti.t)}" aria-label="${ti.t.name}（黄金の証 ${ti.n}/${tot}）">${titleCube(ti.t.k)}<span class="tn">${ti.t.name}</span></button>`}
 function titleModalHtml(ti){
  const cats=titleCats(),tot=cats.length,t=ti.t,n=ti.n;
- const head=`<div class="modal-head"><div class="mt${t.k==='opal'?' opal-anim':''}" style="--ttext:var(--${t.k}-text)">${titleCube(t.k)}<div><b id="titleModalTitle">${t.name}</b><span>金バッジ ${n}/${tot}</span></div></div><button type="button" class="mx" id="titleClose" aria-label="閉じる">×</button></div>`;
+ const head=`<div class="modal-head"><div class="mt${t.k==='opal'?' opal-anim':''}" style="--ttext:var(--${t.k}-text)">${titleCube(t.k)}<div><b id="titleModalTitle">${t.name}</b><span>黄金の証 ${n}/${tot}</span></div></div><button type="button" class="mx" id="titleClose" aria-label="閉じる">×</button></div>`;
  const gl=cats.map(c=>`<div class="gr${ti.owned.has(c.svg)?' ok':''}"><img alt="" src="${bdgSrc(c.svg)}"><div class="tx"><b>${esc(c.nm)}</b><span>${esc(c.cond)}</span></div><div class="ck">${TCHECK}</div></div>`).join('');
- const tt=TTIERS.filter(x=>x.n<=tot).map(x=>`<div class="r ${x.n<n?'done':x.n===n?'cur':''}${x.k==='opal'?' opal-anim':''}"><span>${titleCube(x.k)}</span><span>${x.name}</span><em>金バッジ ${x.n}個</em></div>`).join('');
- return head+`<div class="mh">金バッジ（${tot}種類）</div><div class="gl">${gl}</div><div class="mh">称号の段階</div><div class="tt">${tt}</div>`;
+ const tt=TTIERS.filter(x=>x.n<=tot).map(x=>`<div class="r ${x.n<n?'done':x.n===n?'cur':''}${x.k==='opal'?' opal-anim':''}"><span>${titleCube(x.k)}</span><span>${x.name}</span><em>${x.n}つ達成</em></div>`).join('');
+ return head+`<div class="mh">黄金の証（${tot}種類）</div><div class="gl">${gl}</div><div class="mh">称号の段階</div><div class="tt">${tt}</div>`;
 }
 const titleModalOpen=()=>$('titleModal').style.display==='flex';
 function openTitleModal(){
