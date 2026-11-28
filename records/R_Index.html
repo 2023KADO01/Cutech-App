@@ -44,6 +44,16 @@ input[type=checkbox]{width:18px;height:18px;padding:0;margin:0;accent-color:var(
  .cards #recordRows td.brk:empty{display:block}
 }
 #detailTitle{font-size:1.6rem;font-weight:800}
+.scd{margin:0 0 18px}.scd-h{margin:0 0 8px;padding:0 0 6px;border-bottom:2px solid var(--line);font-size:1.05rem;font-weight:800}
+.scs-ev{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.scs-name{font-size:1.1rem;font-weight:800}
+.scs-fmt{font-size:.78rem;font-weight:700;color:var(--muted);background:var(--btn2);border-radius:999px;padding:2px 10px}
+.scr-row{display:flex;align-items:flex-start;gap:10px;width:100%;margin:0;padding:9px 6px;border:0;border-top:1px solid var(--line);border-radius:8px;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.scs-ev+.scr-row{margin-top:6px}
+.scr-n{flex:none;min-width:24px;height:24px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--btn2);border:1px solid var(--field-line);font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px}
+.scr-n.ex{padding:0 9px;background:color-mix(in srgb,var(--accent) 18%,transparent);border-color:var(--accent);color:var(--accent)}
+.scr-txt{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.5;word-break:break-word}
+.scr-go{flex:none;align-self:center;color:var(--muted);font-size:1.3rem;line-height:1}
+.scr-row:not(:disabled):active{transform:scale(.98)}
 .scs .exl{margin:4px 0 0;padding-left:0;list-style:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;word-break:break-word}
 .plink{color:inherit;text-decoration:underline;text-decoration-color:var(--muted);text-underline-offset:3px}
 .rk9{font-weight:800}.rk1{font-weight:800;color:#d32f2f}
@@ -175,10 +185,11 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 <section class="panel">
  <h2>保存済みのスクランブル</h2>
  <div class="fields" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
-  <div class="field"><label for="fsDate">競技日</label><input id="fsDate" type="date"></div>
-  <div class="field"><label for="fsEvent">種目</label><select id="fsEvent"></select></div>
+  <div class="field" style="margin-bottom:8px"><label id="fsPLabel">期間</label><div id="fsPeriod" role="group" aria-labelledby="fsPLabel"></div></div>
+  <div class="field" style="max-width:340px"><label for="fsEvent">種目</label><select id="fsEvent"></select></div>
  </div>
- <div class="row" style="margin:4px 0 12px"><button class="btn secondary sm" type="button" id="fsClear">絞り込みをクリア</button></div>
+ <div id="fsChips" class="row" style="margin:0 0 8px;gap:6px"></div>
+ <div class="row" style="margin:4px 0 12px;align-items:center"><button class="btn secondary sm" type="button" id="fsClear">絞り込みをクリア</button><span class="muted" id="fsCount"></span></div>
  <div id="scSaved"></div>
  <div class="empty" id="scEmpty">保存済みのスクランブルはありません。</div>
 </section>
@@ -269,7 +280,7 @@ function paintAuto(){guarded('paint',paint)}
 // ================= タップした要素を、指が触れた瞬間に確定する =================
 // 指が触れてから離れるまでの間に画面がずれて、別のボタンが指の下に来ても、「触れた瞬間に指の下にあった要素」の操作として扱う。
 // （触れた場所が操作できない場所で、ずれてきたボタンにクリックが届いたときは、そのクリックを無視する）
-const TAP_SEL='a[href],button,input,select,textarea,label,summary,[role="button"],[tabindex]:not([tabindex="-1"]),[data-rid],[data-pick],[data-rm],.ct-row,.ct-cell,.att-btn,.rn-item,.isel-btn,.isel-opt,.bimg,.scrmini,.edbtn,#scrPanelImg,#mImg,#mMini';
+const TAP_SEL='a[href],button,input,select,textarea,label,summary,[role="button"],[tabindex]:not([tabindex="-1"]),[data-rid],[data-pick],[data-rm],.ct-row,.ct-cell,.att-btn,.rn-item,.isel-btn,.isel-opt,.bimg,.scrmini,.scr-row,.edbtn,#scrPanelImg,#mImg,#mMini';
 let tapDown=null;
 document.addEventListener('pointerdown',e=>{
  if(e.button>0||e.isPrimary===false){tapDown=null;return}
@@ -541,6 +552,7 @@ $('cutechBody').addEventListener('click',e=>{
  if(tr){const r=records.find(x=>x.id===tr.dataset.rid);if(r)openDetail(r)}
 });
 // ---- Edit a saved record (everything except the times) ----
+const chipsHtml=chips=>chips.map(([k,t])=>`<span class="fchip">${esc(t)}<button type="button" data-chip="${k}" aria-label="${esc(t)}を外す">×</button></span>`).join('');
 function closeScrModal(){$('scrModal').style.display='none'}
 // 種目アイコン（cubing icons）。対応する種目だけ、名前の前にアイコンを付ける
 const EV_ICON={'3x3x3 Cube':'event-333','2x2x2 Cube':'event-222','4x4x4 Cube':'event-444','5x5x5 Cube':'event-555','6x6x6 Cube':'event-666','7x7x7 Cube':'event-777',
@@ -964,15 +976,23 @@ function scrImgHtml(ev,sc){
  }
  return h?`<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px">${h}</div>`:'';
 }
+function scrImgBlock(img){return `<div id="mImgWrap" style="${rScrHidden?'display:none':''}"><div id="mImg" style="cursor:pointer;-webkit-user-select:none;user-select:none">${img}</div><div class="muted" style="font-size:.74rem;text-align:center;margin:-2px 0 -8px;padding:8px 0;cursor:pointer">タップで閉じる</div></div><div class="scrmini" id="mMini" role="button" tabindex="0" style="${rScrHidden?'':'display:none'}">スクランブルを表示</div>`}
 let rScrHidden=false; // スクランブル画像を閉じたままにするか
 function openScrModal(r,k){
  const att=r.attempts[k],en=findScr(r.date,r.event,fLabel(recordFormat(r))),t=en&&(att&&att.ex?(en.ex&&en.ex[att.ex-1]):en.scrambles[k]);
  $('scrModalTitle').innerHTML=`${esc(r.name)}　${evName(r.event)}`+(r.attempts.length>1?`　${k+1}回目`:'');
  const lb=att&&att.ex?`Ex${esc(att.ex)}`:'',tim=att?`<div style="margin-bottom:16px">${lb?`<div style="font-size:.95rem;font-weight:700;color:var(--muted)">${lb}</div>`:''}<div style="font-size:${isMbld(r.event)?'1.9rem':'2.7rem'};font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums">${(v=>isFmc(r.event)&&/^\d+$/.test(v)?v+'手':v)(attemptHtml(att,r.event,true))}</div></div>`:'';
  const img=t?scrImgHtml(r.event,t):'';
- const scrPart=t?esc(scrText(r.event,t)).replace(/\n/g,'<br>')+(img?`<div id="mImgWrap" style="${rScrHidden?'display:none':''}"><div id="mImg" style="cursor:pointer;-webkit-user-select:none;user-select:none">${img}</div><div class="muted" style="font-size:.74rem;text-align:center;margin:-2px 0 -8px;padding:8px 0;cursor:pointer">タップで閉じる</div></div><div class="scrmini" id="mMini" role="button" tabindex="0" style="${rScrHidden?'':'display:none'}">スクランブルを表示</div>`:''):`<span style="color:var(--muted);font-size:1rem">${att&&att.ex?'Exスクランブルは未入力です。':'スクランブルは未入力です。'}</span>`;
+ const scrPart=t?esc(scrText(r.event,t)).replace(/\n/g,'<br>')+(img?`${scrImgBlock(img)}`:''):`<span style="color:var(--muted);font-size:1rem">${att&&att.ex?'Exスクランブルは未入力です。':'スクランブルは未入力です。'}</span>`;
  const sb=solBlock(att);
  $('scrModalBody').innerHTML=tim+scrPart+(sb?`<div style="margin-top:16px">${sb}</div>`:'');
+ $('scrModal').style.display='flex';
+}
+// 一覧のスクランブル行から開く（記録に紐づかないので、タイムは出さない）
+function openScrFromList(e,k,ex){
+ const t=ex?e.ex[k]:e.scrambles[k],img=scrImgHtml(e.event,t);
+ $('scrModalTitle').innerHTML=`${evName(e.event)} ${esc(fLabel(e.format))}　・${ex?'Ex '+(k+1):(k+1)+'本目'}`;
+ $('scrModalBody').innerHTML=`<div class="muted" style="font-size:.9rem;margin-bottom:10px">${esc(dateHead(e.date))}</div>`+esc(scrText(e.event,t)).replace(/\n/g,'<br>')+(img?scrImgBlock(img):'');
  $('scrModal').style.display='flex';
 }
 $('dayBody').addEventListener('click',e=>{const b=e.target.closest('.att-btn');if(!b)return;const r=records.find(x=>x.id===b.dataset.rid);if(r)openScrModal(r,Number(b.dataset.ai))});
@@ -1403,7 +1423,7 @@ function renderRecords(){
  if(ev)chips.push(['ev','種目：'+ev]);if(qraw)chips.push(['q','競技者：'+qraw]);
  if(PF.S.p!=='all'&&(PF.S.p!=='custom'||from||to))chips.push(['p','期間：'+PF.label()]);
  if(sort!=='new')chips.push(['sort','並び順：'+RF_SORTS[sort]]);
- setHtml($('rfChips'),chips.map(([k,t])=>`<span class="fchip">${esc(t)}<button type="button" data-chip="${k}" aria-label="${esc(t)}を外す">×</button></span>`).join(''));
+ setHtml($('rfChips'),chipsHtml(chips));
  $('rfClear').disabled=!chips.length;
  $('rfCount').textContent=dataLoaded?`${list.length}件`+(list.length!==records.length?`（全${records.length}件）`:'')+(list.length>shown.length?`　${shown.length}件を表示中`:''):'';
  $('recMoreRow').style.display=list.length>shown.length?'flex':'none';
@@ -1472,19 +1492,40 @@ function exportCsv(){
 $('exportBtn2').addEventListener('click',exportCsv);
 // ---- CSV import (same layout as the exported CSV) ----
 let scrambles=[];
-$('fsDate').value=today();
+const FS_DEF={p:'today',o:0};
+const PF2=mountPeriod($('fsPeriod'),{onChange:()=>renderSaved()});PF2.set(FS_DEF);
+const dateHead=d=>{const[y,m,dd]=d.split('-').map(Number);return`${y}/${pad2(m)}/${pad2(dd)}（${'日月火水木金土'[new Date(Date.UTC(y,m-1,dd)).getUTCDay()]}）`};
+let scrView=[];
 function renderSaved(){
  const sel=$('fsEvent'),prev=sel.value,allEv=evNames();
  const present=allEv.concat([...new Set(scrambles.map(x=>x.event))].filter(e=>!allEv.includes(e))).filter(e=>scrambles.some(x=>x.event===e));
  sel.innerHTML='<option value="">すべての種目</option>'+present.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
  sel.value=present.includes(prev)?prev:'';
- const d=$('fsDate').value,ev=sel.value,list=scrambles.filter(x=>(!d||x.date===d)&&(!ev||x.event===ev));
+ const dates=scrambles.map(x=>x.date).sort();PF2.setBounds(dates[0],dates[dates.length-1]);PF2.update();
+ const {from,to}=PF2.range(),ev=sel.value,list=scrambles.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to)&&(!ev||x.event===ev));
+ list.sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt).localeCompare(String(a.createdAt)));
+ scrView=list;
  $('scEmpty').textContent=scrambles.length?'条件に合う保存済みのスクランブルはありません。':'保存済みのスクランブルはありません。';
  $('scEmpty').style.display=list.length?'none':'block';
- $('scSaved').innerHTML=list.sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt).localeCompare(String(a.createdAt))).map(e=>`<div class="scs"><div class="scs-head"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span><strong>${esc(e.date)}</strong>　${evName(e.event)} <span>${esc(fLabel(e.format))}</span></span></div></div><ol>${e.scrambles.map(t=>`<li>${esc(scrText(e.event,t)).replace(/\n/g,'<br>')}</li>`).join('')}</ol>${(e.ex&&e.ex.length)?`<ol class="exl">${e.ex.map((t,i)=>`<li>Ex${i+1}. ${esc(scrText(e.event,t)).replace(/\n/g,'<br>')}</li>`).join('')}</ol>`:''}</div>`).join('');
+ const chips=[];
+ if(ev)chips.push(['ev','種目：'+ev]);
+ if(!(PF2.S.p===FS_DEF.p&&!PF2.S.o))chips.push(['p','期間：'+PF2.label()]);
+ setHtml($('fsChips'),chipsHtml(chips));
+ $('fsClear').disabled=!chips.length;
+ $('fsCount').textContent=`${list.length}件`+(list.length!==scrambles.length?`（全${scrambles.length}件）`:'');
+ const row=(i,k,x,lab,t,e)=>`<button type="button" class="scr-row" data-i="${i}" data-k="${k}"${x?' data-x="1"':''}><span class="scr-n${x?' ex':''}">${lab}</span><span class="scr-txt">${esc(scrText(e.event,t)).replace(/\n/g,'<br>')}</span><span class="scr-go" aria-hidden="true">›</span></button>`;
+ let h='',cur=null;
+ list.forEach((e,i)=>{
+  if(e.date!==cur){if(cur!==null)h+='</div>';cur=e.date;h+=`<div class="scd"><h3 class="scd-h">${esc(dateHead(e.date))}</h3>`}
+  h+=`<div class="scs"><div class="scs-ev"><span class="scs-name">${evName(e.event)}</span><span class="scs-fmt">${esc(fLabel(e.format))}</span></div>`+e.scrambles.map((t,k)=>row(i,k,false,k+1,t,e)).join('')+((e.ex||[]).map((t,k)=>row(i,k,true,'Ex'+(k+1),t,e)).join(''))+'</div>';
+ });
+ if(cur!==null)h+='</div>';
+ setHtml($('scSaved'),h);
 }
-$('fsDate').addEventListener('input',renderSaved);$('fsDate').addEventListener('change',renderSaved);$('fsEvent').addEventListener('change',renderSaved);
-$('fsClear').addEventListener('click',()=>{$('fsDate').value='';$('fsEvent').value='';renderSaved()});
+$('scSaved').addEventListener('click',e=>{const b=e.target.closest('.scr-row');if(!b)return;const en=scrView[Number(b.dataset.i)];if(en)openScrFromList(en,Number(b.dataset.k),!!b.dataset.x)});
+$('fsEvent').addEventListener('change',renderSaved);
+$('fsChips').addEventListener('click',e=>{const b=e.target.closest('[data-chip]');if(!b)return;if(b.dataset.chip==='ev')$('fsEvent').value='';else PF2.set(FS_DEF);renderSaved()});
+$('fsClear').addEventListener('click',()=>{$('fsEvent').value='';PF2.set(FS_DEF);renderSaved()});
 const MN_HOOKS={detailModal:()=>closeDetail(),scrModal:()=>closeScrModal()};
 // ================= 戻る操作とモーダルの連携 =================
 // 画面の切り替えは URL の「#」で行っている。モーダルを開くと「#画面|m1」のように履歴を1つ積み、
