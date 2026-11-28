@@ -28,7 +28,7 @@ input[type=checkbox]{width:18px;height:18px;padding:0;margin:0;accent-color:var(
 .pf-custom{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}.pf-custom .field{margin-bottom:4px}.pf-warn{margin:0 0 8px}
 .brk{display:none}.fchip{display:inline-flex;align-items:center;gap:2px;background:var(--btn2);border:1px solid var(--field-line);border-radius:999px;padding:2px 4px 2px 12px;font-size:.82rem}.fchip button{border:0;background:none;color:inherit;font:inherit;font-size:1rem;line-height:1;padding:4px 8px;cursor:pointer;border-radius:999px}
 .vsw{display:none;min-height:0;padding:3px;flex:none}.vsw button{display:flex;align-items:center;justify-content:center;width:40px;height:34px;padding:0;flex:none}@media(max-width:640px){.vsw{display:flex;margin-left:auto}}
-.ct-nm{margin-left:.6em}.ct-date{font-size:.75rem}.ev-short{display:none}@media(max-width:640px){.ct-nm{display:block;margin-left:0;font-size:.85rem;color:var(--muted)}.ct-date{display:none}.ev-full{display:none}.ev-short{display:inline}}
+.ct-cell+.ct-cell{margin-top:6px}.ct-nm{margin-left:.6em}.ct-date{font-size:.75rem}.ev-short{display:none}@media(max-width:640px){.ct-nm{display:block;margin-left:0;font-size:.85rem;color:var(--muted)}.ct-date{display:none}.ev-full{display:none}.ev-short{display:inline}}
 @media(max-width:640px){
  #pageRecords table.cards,.cards tbody,.cards tr,.cards td{display:block;width:100%}
  .cards thead{display:none}
@@ -498,7 +498,7 @@ function renderCutech(){
  $('ctToggle').style.display=all?'none':'';$('ctTitle').textContent=all?'Cutech記録':'Cutechランキング';
  document.querySelectorAll('#cutechPanel [data-ct]').forEach(b=>{const on=b.dataset.ct===cutechMode;b.classList.toggle('secondary',!on)});
  if(all){
-  const cell=(x,withBtn)=>`<div class="ct-cell" data-rid="${esc(x.r.id)}" style="margin-bottom:6px"><strong>${x.html}</strong><span class="ct-nm">${esc(x.r.name)}</span><div class="muted ct-date">${esc(dateHead(x.r.date))}</div></div>`;
+  const cell=(x,withBtn)=>`<div class="ct-cell" data-rid="${esc(x.r.id)}"><strong>${x.html}</strong><span class="ct-nm">${esc(x.r.name)}</span><div class="muted ct-date">${esc(dateHead(x.r.date))}</div></div>`;
   const body=evs.filter(e=>records.some(r=>r.event===e)).map(e=>{
    const b=cutechRows(e,true).filter(x=>x.rank===1),a=cutechRows(e,false).filter(x=>x.rank===1);
    return `<tr><td style="white-space:nowrap"><strong><span class="ev-full">${evName(e)}</span><span class="ev-short">${evShort(e)}</span></strong></td><td>${b.length?b.map(x=>cell(x,true)).join(''):'—'}</td><td>${a.length?a.map(x=>cell(x,false)).join(''):'—'}</td></tr>`;
