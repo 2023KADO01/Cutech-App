@@ -497,10 +497,10 @@ function renderCutech(){
  $('ctToggle').style.display=all?'none':'';$('ctTitle').textContent=all?'Cutech記録':'Cutechランキング';
  document.querySelectorAll('#cutechPanel [data-ct]').forEach(b=>{const on=b.dataset.ct===cutechMode;b.classList.toggle('secondary',!on)});
  if(all){
-  const cell=(x,withBtn)=>`<div class="ct-cell" data-rid="${esc(x.r.id)}" style="margin-bottom:6px"><strong>${x.html}</strong><div class="muted" style="font-size:.85rem">${esc(x.r.name)}　${esc(dateHead(x.r.date))}</div></div>`;
+  const cell=(x,withBtn)=>`<div class="ct-cell" data-rid="${esc(x.r.id)}" style="margin-bottom:6px"><strong>${x.html}</strong><div class="muted" style="font-size:.85rem">${esc(x.r.name)}</div></div>`;
   const body=evs.filter(e=>records.some(r=>r.event===e)).map(e=>{
    const b=cutechRows(e,true).filter(x=>x.rank===1),a=cutechRows(e,false).filter(x=>x.rank===1);
-   return `<tr><td style="white-space:nowrap"><strong>${evName(e)}</strong></td><td>${b.length?b.map(x=>cell(x,true)).join(''):'—'}</td><td>${a.length?a.map(x=>cell(x,false)).join(''):'—'}</td></tr>`;
+   return `<tr><td style="white-space:nowrap"><strong>${evShort(e)}</strong></td><td>${b.length?b.map(x=>cell(x,true)).join(''):'—'}</td><td>${a.length?a.map(x=>cell(x,false)).join(''):'—'}</td></tr>`;
   }).join('');
   $('cutechBody').innerHTML=body?`<div class="table-wrap"><table><thead><tr><th>種目</th><th>単発 1位</th><th>平均 1位</th></tr></thead><tbody>${body}</tbody></table></div>`:`<div class="empty" style="display:block">${emptyRec()}</div>`;
   return;
