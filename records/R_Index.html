@@ -991,7 +991,7 @@ function openScrModal(r,k){
 // 一覧のスクランブル行から開く（記録に紐づかないので、タイムは出さない）
 function openScrFromList(e,k,ex){
  const t=ex?e.ex[k]:e.scrambles[k],img=scrImgHtml(e.event,t);
- $('scrModalTitle').innerHTML=`${evName(e.event)} ${esc(fLabel(e.format))}　・${ex?'Ex '+(k+1):(k+1)+'本目'}`;
+ $('scrModalTitle').innerHTML=`${evName(e.event)} ${esc(fLabel(e.format))}・${ex?'Ex '+(k+1):(k+1)+'本目'}`;
  $('scrModalBody').innerHTML=`<div class="muted" style="font-size:.9rem;margin-bottom:10px">${esc(dateHead(e.date))}</div>`+esc(scrText(e.event,t)).replace(/\n/g,'<br>')+(img?scrImgBlock(img):'');
  $('scrModal').style.display='flex';
 }
