@@ -185,8 +185,8 @@ input,textarea,select,[contenteditable],#scrPanelBody,#scrModalBody{-webkit-touc
 </div>
 <div id="pageScramble" style="display:none">
 <section class="panel">
- <div class="records-head"><h2>保存済みのスクランブル</h2><button class="btn secondary sm" type="button" id="fsMode" aria-pressed="false" aria-label="期間で絞り込む" title="期間で絞り込む">📅 期間</button></div>
- <div id="fsDayBox"><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn secondary sm" type="button" id="fsPrev" aria-label="前の日" title="前の記録日">◀</button><input id="fsDate" type="date" aria-label="表示する日" style="width:auto;min-width:0"><button class="btn secondary sm" type="button" id="fsNext" aria-label="次の日" title="次の記録日">▶</button><button class="btn secondary sm" type="button" id="fsToday">今日</button></div><div class="muted dn-lab" id="fsDayLab"></div></div>
+ <div class="records-head"><h2>保存済みのスクランブル</h2></div>
+ <div id="fsDayBox"><div class="row" style="gap:6px;flex-wrap:nowrap"><span id="fsNavBox" style="display:contents"><button class="btn secondary sm" type="button" id="fsPrev" aria-label="前の日" title="前の記録日">◀</button><input id="fsDate" type="date" aria-label="表示する日" style="width:auto;min-width:0"><button class="btn secondary sm" type="button" id="fsNext" aria-label="次の日" title="次の記録日">▶</button></span><button class="btn secondary sm" type="button" id="fsMode" aria-pressed="false" title="期間で絞り込む">期間を指定</button></div><div class="muted dn-lab" id="fsDayLab"></div></div>
  <div id="fsPBox" hidden><div class="field" style="margin-bottom:8px"><div id="fsPeriod" role="group" aria-label="期間"></div></div></div>
  <div class="fields" style="grid-template-columns:minmax(0,340px)"><div class="field"><label for="fsEvent">種目</label><select id="fsEvent"></select></div></div>
  <div id="fsChips" class="row" style="margin:0 0 8px;gap:6px"></div>
@@ -1508,9 +1508,9 @@ function renderSaved(){
  sel.value=present.includes(prev)?prev:'';
  const dates=scrambles.map(x=>x.date).sort();PF2.setBounds(dates[0],dates[dates.length-1]);PF2.update();
  let {from,to}=PF2.range();const dayV=$('fsDate').value;if(!fsPeriodOn){from=to=dayV}
- $('fsMode').classList.toggle('on',fsPeriodOn);$('fsMode').setAttribute('aria-pressed',fsPeriodOn);$('fsDayBox').hidden=fsPeriodOn;$('fsPBox').hidden=!fsPeriodOn;
+ $('fsMode').classList.toggle('on',fsPeriodOn);$('fsMode').setAttribute('aria-pressed',fsPeriodOn);$('fsNavBox').style.display=fsPeriodOn?'none':'contents';$('fsDayLab').hidden=fsPeriodOn;$('fsPBox').hidden=!fsPeriodOn;
  {let pv='',nx='';for(const x of new Set(dates)){if(x<dayV&&(!pv||x>pv))pv=x;if(x>dayV&&(!nx||x<nx))nx=x}
-  $('fsPrev').disabled=!dayV||!pv;$('fsNext').disabled=!dayV||!nx;$('fsPrev').dataset.to=pv;$('fsNext').dataset.to=nx;$('fsToday').disabled=dayV===today();$('fsDayLab').textContent=dayV?dateHead(dayV):''}
+  $('fsPrev').disabled=!dayV||!pv;$('fsNext').disabled=!dayV||!nx;$('fsPrev').dataset.to=pv;$('fsNext').dataset.to=nx;$('fsDayLab').textContent=dayV?dateHead(dayV):''}
  const ev=sel.value,list=scrambles.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to)&&(!ev||x.event===ev));
  list.sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt).localeCompare(String(a.createdAt)));
  scrView=list;
@@ -1538,7 +1538,6 @@ $('fsClear').addEventListener('click',()=>{$('fsEvent').value='';fsPeriodOn=fals
 $('fsMode').addEventListener('click',()=>{fsPeriodOn=!fsPeriodOn;renderSaved()});
 $('fsDate').addEventListener('change',()=>{if(!$('fsDate').value)$('fsDate').value=today();renderSaved()});
 for(const id of ['fsPrev','fsNext'])$(id).addEventListener('click',()=>{const t=$(id).dataset.to;if(t){$('fsDate').value=t;renderSaved()}});
-$('fsToday').addEventListener('click',()=>{$('fsDate').value=today();renderSaved()});
 const MN_HOOKS={detailModal:()=>closeDetail(),scrModal:()=>closeScrModal()};
 // ================= 戻る操作とモーダルの連携 =================
 // 画面の切り替えは URL の「#」で行っている。モーダルを開くと「#画面|m1」のように履歴を1つ積み、
